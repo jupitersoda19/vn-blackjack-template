@@ -193,8 +193,6 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
       startBlackjackGame();
     }
     
-    // Add to history
-    setVnHistory(prev => [...prev, event.key]);
   }, [currentEvent, dealerIndex, eventsData, gameState, playerIndex, startBlackjackGame]);
 
   /**
