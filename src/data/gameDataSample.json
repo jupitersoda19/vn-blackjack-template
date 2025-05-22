@@ -1,0 +1,566 @@
+{
+  "metadata": {
+    "title": "Macro & Condition Test Story",
+    "version": "1.0.0",
+    "description": "A simplified story to test all macro and conditional functionality",
+    "author": "Test Author",
+    "backgroundImage": "/assets/backgrounds/casino-entrance.jpg",
+    "titleScreenTheme": {
+      "primaryColor": "#8B0000",
+      "secondaryColor": "#2D0000",
+      "textColor": "#F5F5DC"
+    },
+    "editorNotes": "Testing macros, conditions, and game flow"
+  },
+  "events": [
+    {
+      "key": "intro",
+      "title": "Test Introduction",
+      "editorTags": ["test", "intro"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "Welcome to the macro and condition test! You start with ${playerMoney}.",
+          "macros": ["increaseVisitCount", "beNeutral"],
+          "conditions": ["isNewbie"],
+          "conditionalText": {
+            "isNewbie": " This is your first time here."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "welcoming"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "Hello! I'm Victoria, your test hostess.",
+          "macros": ["increaseRelationship:victoria:5"],
+          "choices": [
+            {
+              "text": "Be charming (+5 Victoria relationship)",
+              "macros": ["beCharming", "increaseRelationship:victoria:5"],
+              "nextEvent": "relationship_test"
+            },
+            {
+              "text": "Be aggressive (-3 Victoria relationship)",
+              "macros": ["beAggressive", "decreaseRelationship:victoria:3"],
+              "nextEvent": "relationship_test"
+            },
+            {
+              "text": "Skip to money test",
+              "nextEvent": "money_test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "relationship_test",
+      "title": "Relationship Test",
+      "editorTags": ["test", "relationships"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "neutral"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "Let me see how we're getting along. Relationship: {victoriaRelationship}",
+          "conditions": ["likesYou:victoria"],
+          "conditionalText": {
+            "likesYou:victoria": " I'm starting to like you!",
+            "lovesYou:victoria": " I think I'm falling for you!",
+            "dislikes:victoria": " You're being quite rude.",
+            "isCharming": " Your charm is working on me.",
+            "isAggressive": " Your aggressive attitude is off-putting."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "flirty"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "What would you like to test next?",
+          "choices": [
+            {
+              "text": "Increase relationship further (+10)",
+              "macros": ["increaseRelationship:victoria:10"],
+              "nextEvent": "relationship_test"
+            },
+            {
+              "text": "Test VIP features (requires liking you)",
+              "macros": ["improveReputation:20"],
+              "requiresCondition": "likesYou:victoria",
+              "nextEvent": "vip_test"
+            },
+            {
+              "text": "Go to money test",
+              "nextEvent": "money_test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "vip_test",
+      "title": "VIP Test",
+      "editorTags": ["test", "vip"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/vip-room.jpg",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "seductive"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "Welcome to the VIP area! Reputation: {casinoReputation}",
+          "macros": ["successfulDate:victoria"],
+          "conditions": ["isVIP"],
+          "conditionalText": {
+            "isVIP": " You're our most valued guest!",
+            "lovesYou:victoria": " I've been waiting for this moment.",
+            "isCharming + isVIP": " A charming VIP - my favorite combination!"
+          }
+        },
+        {
+          "background": "/assets/backgrounds/vip-room.jpg",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "You spend intimate time with Victoria...",
+          "iframe": {
+            "url": "https://www.hub.org/embed/6797755417f79",
+            "width": "90%",
+            "height": "300px",
+            "position": "center",
+            "allowFullscreen": true
+          }
+        },
+        {
+          "background": "/assets/backgrounds/vip-room.jpg",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "pleased"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "That was wonderful! What's next?",
+          "macros": ["increaseRelationship:victoria:15", "improveReputation:10"],
+          "choices": [
+            {
+              "text": "Test money conditions",
+              "nextEvent": "money_test"
+            },
+            {
+              "text": "Test game functionality",
+              "nextEvent": "game_test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "money_test",
+      "title": "Money Test",
+      "editorTags": ["test", "money"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "professional"
+            }
+          },
+          "speaker": "Rachel",
+          "text": "Let's test money conditions! Current money: ${playerMoney}, Profit: ${profit}",
+          "conditions": ["isRich", "hasModestFunds", "isBroke"],
+          "conditionalText": {
+            "isRich": " You're quite wealthy!",
+            "hasModestFunds": " You have decent funds.",
+            "isBroke": " You're running low on money.",
+            "isWinning": " You're ahead tonight!",
+            "isLosing": " You're down for the evening."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "friendly"
+            }
+          },
+          "speaker": "Rachel",
+          "text": "Want to adjust your money for testing?",
+          "choices": [
+            {
+              "text": "Add $2000 (test rich condition)",
+              "macros": ["addWinnings:2000"],
+              "nextEvent": "money_test"
+            },
+            {
+              "text": "Lose $800 (test broke condition)",
+              "macros": ["addLosses:800"],
+              "nextEvent": "money_test"
+            },
+            {
+              "text": "Test games (need money)",
+              "nextEvent": "game_test"
+            },
+            {
+              "text": "Reset and test achievements",
+              "nextEvent": "achievement_test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "game_test",
+      "title": "Game Test",
+      "editorTags": ["test", "blackjack"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/sophia.png",
+              "name": "Sophia",
+              "emotion": "professional"
+            }
+          },
+          "speaker": "Sophia",
+          "text": "Time to test the game functionality! Current money: ${playerMoney}",
+          "macros": ["increaseRelationship:sophia:3"],
+          "conditionalText": {
+            "canAffordHighStakes": " You can afford high stakes!",
+            "canAffordUltraStakes": " You're ready for ultra stakes!",
+            "isBroke": " You might want to start small."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/sophia.png",
+              "name": "Sophia",
+              "emotion": "welcoming"
+            }
+          },
+          "speaker": "Sophia",
+          "text": "Choose your stakes:",
+          "choices": [
+            {
+              "text": "Low Stakes - $200 (always available)",
+              "action": "startGame",
+              "macros": ["addGamePlayed:blackjack"],
+              "eventParams": {
+                "playerEvent": "Test Low Stakes",
+                "playerCost": 200,
+                "opponentIndices": [1],
+                "opponentEvents": [
+                  {
+                    "name": "Sophia Dealer",
+                    "cost": 1000
+                  }
+                ],
+                "deckCount": 2,
+                "blackjackPayout": 1.5
+              }
+            },
+            {
+              "text": "High Stakes - $1000 (need $1000+)",
+              "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:10"],
+              "eventParams": {
+                "playerEvent": "Test High Stakes",
+                "playerCost": 1000,
+                "opponentIndices": [1],
+                "opponentEvents": [
+                  {
+                    "name": "Sophia Dealer",
+                    "cost": 5000
+                  }
+                ],
+                "deckCount": 4,
+                "specialRules": "vegas"
+              },
+              "requiresCondition": "canAffordHighStakes"
+            },
+            {
+              "text": "Ultra Stakes - $2000 (need $2000+)",
+              "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:20", "unlockAchievement:ultra_test"],
+              "eventParams": {
+                "playerEvent": "Test Ultra Stakes",
+                "playerCost": 2000,
+                "opponentIndices": [1],
+                "opponentEvents": [
+                  {
+                    "name": "Sophia Dealer",
+                    "cost": 10000
+                  }
+                ],
+                "deckCount": 6,
+                "specialRules": "vip"
+              },
+              "requiresCondition": "canAffordUltraStakes"
+            },
+            {
+              "text": "Skip to achievements test",
+              "nextEvent": "achievement_test"
+            }
+          ]
+        }
+      ],
+      "postDialog": [
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/sophia.png",
+              "name": "Sophia",
+              "emotion": "impressed"
+            }
+          },
+          "speaker": "Sophia",
+          "text": "Game complete! {result}. New balance: ${playerMoney}, Profit: ${profit}",
+          "macros": ["increaseRelationship:sophia:5"],
+          "conditionalElements": {
+            "winCondition": {
+              "variable": "playerWon",
+              "value": true,
+              "additionalText": " Excellent play!"
+            },
+            "loseCondition": {
+              "variable": "playerWon",
+              "value": false,
+              "additionalText": " Better luck next time."
+            }
+          },
+          "choices": [
+            {
+              "text": "Play again",
+              "nextEvent": "game_test"
+            },
+            {
+              "text": "Test achievements",
+              "nextEvent": "achievement_test"
+            },
+            {
+              "text": "Test relationship unlock",
+              "macros": ["increaseRelationship:sophia:20"],
+              "requiresCondition": "likesYou:sophia",
+              "nextEvent": "relationship_unlock"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "relationship_unlock",
+      "title": "Relationship Unlock Test",
+      "editorTags": ["test", "relationship-unlock"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/exclusive-suite.png",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/sophia.png",
+              "name": "Sophia",
+              "emotion": "seductive"
+            }
+          },
+          "speaker": "Sophia",
+          "text": "You've won my heart! Relationship: {sophiaRelationship}",
+          "macros": ["successfulDate:sophia", "unlockAchievement:sophia_romance"],
+          "conditions": ["lovesYou:sophia"],
+          "conditionalText": {
+            "lovesYou:sophia": " I think I'm in love with you!",
+            "isCharming": " Your charm is irresistible."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/exclusive-suite.png",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "You enjoy intimate time with Sophia...",
+          "iframe": {
+            "url": "https://www.hub.org/embed/67d2ae942fc1a",
+            "width": "90%",
+            "height": "300px",
+            "position": "center",
+            "allowFullscreen": true
+          }
+        },
+        {
+          "background": "/assets/backgrounds/exclusive-suite.png",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/sophia.png",
+              "name": "Sophia",
+              "emotion": "pleased"
+            }
+          },
+          "speaker": "Sophia",
+          "text": "That was amazing!",
+          "macros": ["increaseRelationship:sophia:10"],
+          "choices": [
+            {
+              "text": "Test achievements",
+              "nextEvent": "achievement_test"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "achievement_test",
+      "title": "Achievement Test",
+      "editorTags": ["test", "achievements"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "Achievement test! Games played: {blackjackGamesPlayed}, Total reputation: {casinoReputation}",
+          "conditionalText": {
+            "isVIP": " You've achieved VIP status!",
+            "isRegular": " You're a regular here now!",
+            "isRich": " You've become wealthy!"
+          }
+        },
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "Test achievement unlocks:",
+          "choices": [
+            {
+              "text": "Unlock test achievement",
+              "macros": ["unlockAchievement:test_complete"],
+              "nextEvent": "achievement_test"
+            },
+            {
+              "text": "Become VIP (75+ reputation)",
+              "macros": ["improveReputation:80"],
+              "nextEvent": "achievement_test"
+            },
+            {
+              "text": "Become regular (5+ visits)",
+              "macros": ["increaseVisitCount", "increaseVisitCount", "increaseVisitCount", "increaseVisitCount", "increaseVisitCount"],
+              "nextEvent": "achievement_test"
+            },
+            {
+              "text": "Complete test",
+              "nextEvent": "test_complete"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "test_complete",
+      "title": "Test Complete",
+      "editorTags": ["test", "complete"],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "happy"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "Congratulations! All tests completed successfully!",
+          "macros": ["unlockAchievement:all_tests_complete"],
+          "conditionalText": {
+            "lovesYou:victoria": " And I love you too!",
+            "isVIP": " You're our most valued tester!",
+            "isRich": " You've mastered the money system!",
+            "isCharming": " Your charm made this test delightful!"
+          }
+        },
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "pleased"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "Final stats - Money: ${playerMoney}, Victoria: {victoriaRelationship}, Sophia: {sophiaRelationship}, Reputation: {casinoReputation}",
+          "choices": [
+            {
+              "text": "Restart test",
+              "nextEvent": "intro",
+              "resetVariables": true
+            },
+            {
+              "text": "Exit",
+              "action": "exit"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "gameVariables": {
+    "playerMoney": 1000,
+    "playerProgress": 0,
+    "visitedLocations": [],
+    "unlockedAchievements": []
+  },
+  "achievements": [
+    {
+      "id": "test_complete",
+      "title": "Test Complete",
+      "description": "Completed a test scenario",
+      "icon": "/assets/icons/star.png"
+    },
+    {
+      "id": "ultra_test",
+      "title": "Ultra Stakes Tester", 
+      "description": "Tested ultra high stakes game",
+      "icon": "/assets/icons/chip.png"
+    },
+    {
+      "id": "sophia_romance",
+      "title": "Sophia's Heart",
+      "description": "Won over Sophia in testing",
+      "icon": "/assets/icons/heart.png"
+    },
+    {
+      "id": "all_tests_complete",
+      "title": "Master Tester",
+      "description": "Completed all functionality tests",
+      "icon": "/assets/icons/gold-heart.png"
+    }
+  ]
+}

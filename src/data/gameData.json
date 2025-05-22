@@ -25,13 +25,18 @@
           "background": "/assets/backgrounds/casino-entrance.jpg",
           "characters": {},
           "speaker": "Narrator",
-          "text": "You step into the casino, and immediately, you're hit with the vibrant atmosphere. The sounds of laughter, music, and chips clinking against each other fill your ears."
+          "text": "You step into the casino, and immediately, you're hit with the vibrant atmosphere. The sounds of laughter, music, and chips clinking against each other fill your ears.",
+          "macros": ["increaseVisitCount", "improveReputation:5"]
         },
         {
           "background": "/assets/backgrounds/casino-entrance.jpg",
           "characters": {},
           "speaker": "Narrator",
-          "text": "You look around, taking in the sights of the various slot machines, tables, and rows of people sitting at the craps table."
+          "text": "You look around, taking in the sights of the various slot machines, tables, and rows of people sitting at the craps table.",
+          "conditions": ["isNewbie"],
+          "conditionalText": {
+            "isRegular": " The staff nods in recognition as you pass by."
+          }
         },
         {
           "background": "/assets/backgrounds/casino-entrance.jpg",
@@ -68,7 +73,13 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Welcome to the casino, love. I'm Victoria. I'll be your hostess for the evening."
+          "text": "Welcome to the casino, love. I'm Victoria. I'll be your hostess for the evening.",
+          "macros": ["increaseRelationship:victoria:3"],
+          "conditions": ["isNewbie"],
+          "conditionalText": {
+            "isRegular": " Welcome back! I was hoping you'd return.",
+            "isVIP": " Welcome back, VIP! Your usual table is ready."
+          }
         },
         {
           "background": "/assets/backgrounds/casino-entrance.jpg",
@@ -85,7 +96,10 @@
             }
           },
           "speaker": "Player",
-          "text": "Thanks, Victoria. It's nice to meet you."
+          "text": "Thanks, Victoria. It's nice to meet you.",
+          "conditionalText": {
+            "likesYou:victoria": " It's great to see you again, Victoria."
+          }
         },
         {
           "background": "/assets/backgrounds/casino-entrance.jpg",
@@ -102,7 +116,9 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Please, call me Vicky. Let's get you settled in at one of our blackjack tables."
+          "text": "Please, call me Vicky. Let's get you settled in at one of our blackjack tables.",
+          "macros": ["increaseRelationship:victoria:2"],
+          "conditions": ["likesYou:victoria"]
         },
         {
           "background": "/assets/backgrounds/casino-entrance.jpg",
@@ -123,6 +139,12 @@
           "choices": [
             {
               "text": "Follow Victoria to the blackjack table",
+              "macros": ["beCharming"],
+              "nextEvent": "blackjack_table"
+            },
+            {
+              "text": "Compliment Victoria on her dress",
+              "macros": ["increaseRelationship:victoria:5", "beCharming"],
               "nextEvent": "blackjack_table"
             }
           ]
@@ -158,7 +180,12 @@
             }
           },
           "speaker": "Victoria",
-          "text": "This is Rachel. She'll be dealing for you tonight."
+          "text": "This is Rachel. She'll be dealing for you tonight.",
+          "macros": ["increaseRelationship:rachel:2"],
+          "conditions": ["likesYou:victoria"],
+          "conditionalText": {
+            "isCharming": " You'll love her - she's as charming as you are."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -180,7 +207,13 @@
             }
           },
           "speaker": "Rachel",
-          "text": "Hi there! Welcome to our table. Can I get you started with some chips?"
+          "text": "Hi there! Welcome to our table. Can I get you started with some chips?",
+          "macros": ["increaseRelationship:rachel:3"],
+          "conditions": ["isNewbie"],
+          "conditionalText": {
+            "isRich": " I can see you're a serious player - let's get you some premium chips.",
+            "isRegular": " Back for more action? I like that in a player."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -202,7 +235,10 @@
             }
           },
           "speaker": "Player",
-          "text": "Yeah, please. And do you have any recommendations for this game?"
+          "text": "Yeah, please. And do you have any recommendations for this game?",
+          "conditionalText": {
+            "isCharming": " I'd love to hear your expert advice, Rachel."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -224,7 +260,12 @@
             }
           },
           "speaker": "Rachel",
-          "text": "Well, the key is to keep track of your hand value. If it gets too close to 21, you might want to hit or stand."
+          "text": "Well, the key is to keep track of your hand value. If it gets too close to 21, you might want to hit or stand.",
+          "macros": ["increaseRelationship:rachel:2"],
+          "conditions": ["likesYou:rachel"],
+          "conditionalText": {
+            "isCharming": " But I have a feeling you'll do just fine."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -246,7 +287,11 @@
             }
           },
           "speaker": "Victoria",
-          "text": "And don't forget to pay attention to the dealer's up card. That can help you make better decisions."
+          "text": "And don't forget to pay attention to the dealer's up card. That can help you make better decisions.",
+          "conditions": ["likesYou:victoria"],
+          "conditionalText": {
+            "lovesYou:victoria": " Though I'll be watching to help you out if you need it."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -268,7 +313,8 @@
             }
           },
           "speaker": "Narrator",
-          "text": "You begin playing, focusing on the game as much as possible. As you continue, you can feel a growing attraction between you and Vicky, especially when she helps you out and offers words of encouragement. You also notice that Rachel seems to be flirting with you, but you try to focus on the game."
+          "text": "You begin playing, focusing on the game as much as possible. As you continue, you can feel a growing attraction between you and Vicky, especially when she helps you out and offers words of encouragement. You also notice that Rachel seems to be flirting with you, but you try to focus on the game.",
+          "conditions": ["likesYou:victoria", "likesYou:rachel"]
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -291,20 +337,30 @@
           },
           "speaker": "Narrator",
           "text": "It's time to start playing. What stakes would you like to play?",
+          "conditionalText": {
+            "isRich": " With your bankroll, you can afford any table.",
+            "isBroke": " You'll want to be careful with your limited funds."
+          },
           "choices": [
             {
               "text": "Low Stakes - $200",
               "action": "startGame",
+              "macros": ["addGamePlayed:blackjack"],
               "eventParams": {
                 "playerEvent": "Low Stakes Game",
                 "playerCost": 200,
-                "opponentIndices": [
-                  1
-                ],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 200
+                },
+                "dealers": [
                   {
-                    "name": "Rachel Dealer",
-                    "cost": 1000
+                    "name": "Rachel",
+                    "image": "/assets/characters/rachel.png",
+                    "startingMoney": 1000,
+                    "eventName": "Rachel's Blackjack Table",
+                    "specialties": ["Friendly Service", "Beginner Friendly"]
                   }
                 ],
                 "deckCount": 2,
@@ -314,16 +370,22 @@
             {
               "text": "Medium Stakes - $500",
               "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:5"],
               "eventParams": {
                 "playerEvent": "Medium Stakes Game",
                 "playerCost": 500,
-                "opponentIndices": [
-                  1
-                ],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 500
+                },
+                "dealers": [
                   {
-                    "name": "Rachel Dealer",
-                    "cost": 2500
+                    "name": "Rachel",
+                    "image": "/assets/characters/rachel.png",
+                    "startingMoney": 2500,
+                    "eventName": "Rachel's Medium Stakes Table",
+                    "specialties": ["Professional Dealing", "Medium Stakes"]
                   }
                 ],
                 "deckCount": 4,
@@ -333,26 +395,28 @@
             {
               "text": "High Stakes - $1000",
               "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:10"],
               "eventParams": {
                 "playerEvent": "High Stakes Game",
                 "playerCost": 1000,
-                "opponentIndices": [
-                  1
-                ],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 1000
+                },
+                "dealers": [
                   {
-                    "name": "Rachel Dealer",
-                    "cost": 5000
+                    "name": "Rachel",
+                    "image": "/assets/characters/rachel.png",
+                    "startingMoney": 5000,
+                    "eventName": "Rachel's High Stakes Table",
+                    "specialties": ["High Stakes", "Vegas Rules", "Expert Dealing"]
                   }
                 ],
                 "specialRules": "vegas",
                 "deckCount": 6
               },
-              "requiresCondition": {
-                "variable": "playerMoney",
-                "operator": ">=",
-                "value": 1000
-              }
+              "requiresCondition": "canAffordHighStakes"
             }
           ]
         }
@@ -379,6 +443,7 @@
           },
           "speaker": "Narrator",
           "text": "After an exciting game, you've won! {result}. Your current balance is now ${money}.",
+          "macros": ["improveReputation:10"],
           "conditionalElements": {
             "winCondition": {
               "variable": "playerWon",
@@ -390,6 +455,11 @@
               "value": false,
               "additionalText": " Victoria gives you a sympathetic look."
             }
+          },
+          "conditionalText": {
+            "isWinning": " You're on a winning streak!",
+            "isLosing": " Better luck next time.",
+            "isRich": " Your wealth continues to grow."
           }
         },
         {
@@ -413,19 +483,372 @@
           },
           "speaker": "Victoria",
           "text": "You played wonderfully! As a special reward, I'd like to offer you a private session in our VIP room. Would you like to join me?",
+          "macros": ["increaseRelationship:victoria:5"],
+          "conditions": ["likesYou:victoria"],
+          "conditionalText": {
+            "lovesYou:victoria": " I've been thinking about this all evening.",
+            "isVIP": " You deserve the royal treatment."
+          },
           "choices": [
             {
               "text": "Accept Victoria's invitation",
+              "macros": ["increaseRelationship:victoria:10", "improveReputation:15"],
+              "requiresCondition": "likesYou:victoria",
               "nextEvent": "vip_room"
             },
             {
               "text": "Play another round first",
+              "macros": ["increaseRelationship:rachel:5"],
               "nextEvent": "blackjack_table"
+            },
+            {
+              "text": "Ask Rachel what she thinks",
+              "macros": ["increaseRelationship:rachel:8", "beCharming"],
+              "nextEvent": "rachel_choice"
             }
           ]
         }
       ],
       "nextEvent": "vip_room"
+    },
+    {
+      "key": "rachel_choice",
+      "title": "Rachel's Opinion",
+      "editorTags": [
+        "choice",
+        "relationship"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "curious"
+            },
+            "left": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "surprised"
+            },
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "flattered"
+            }
+          },
+          "speaker": "Rachel",
+          "text": "You're asking for my opinion? How thoughtful!",
+          "macros": ["increaseRelationship:rachel:5"],
+          "conditions": ["likesYou:rachel"],
+          "conditionalText": {
+            "lovesYou:rachel": " I think you should follow your heart.",
+            "isCharming": " A gentleman always asks a lady's opinion."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "interested"
+            },
+            "left": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "competitive"
+            },
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "confident"
+            }
+          },
+          "speaker": "Rachel",
+          "text": "Actually, I think you should spend some time with me first. I promise I can show you just as good a time.",
+          "macros": ["increaseRelationship:rachel:8"],
+          "conditions": ["likesYou:rachel"],
+          "choices": [
+            {
+              "text": "Go with Victoria as planned",
+              "macros": ["increaseRelationship:victoria:5", "decreaseRelationship:rachel:3"],
+              "nextEvent": "vip_room"
+            },
+            {
+              "text": "Choose Rachel instead",
+              "macros": ["increaseRelationship:rachel:15", "decreaseRelationship:victoria:5"],
+              "requiresCondition": "likesYou:rachel",
+              "nextEvent": "rachel_private_time"
+            },
+            {
+              "text": "Suggest spending time with both",
+              "macros": ["increaseRelationship:victoria:8", "increaseRelationship:rachel:8", "beCharming"],
+              "requiresCondition": "lovesYou:victoria",
+              "nextEvent": "threesome_option"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "vip_room"
+    },
+    {
+      "key": "rachel_private_time",
+      "title": "Private Time with Rachel",
+      "editorTags": [
+        "romantic",
+        "alternative"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/dealer-room.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "excited"
+            },
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "seductive",
+              "state": "close"
+            }
+          },
+          "speaker": "Narrator",
+          "text": "Rachel leads you to a private dealer's room behind the main floor. The intimate space is perfect for getting to know each other better.",
+          "macros": ["successfulDate:rachel", "unlockAchievement:rachel_romance"]
+        },
+        {
+          "background": "/assets/backgrounds/dealer-room.jpg",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "attracted"
+            },
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "intimate",
+              "state": "very-close"
+            }
+          },
+          "speaker": "Rachel",
+          "text": "I'm so glad you chose me. Victoria's nice, but I think we have a special connection.",
+          "conditions": ["lovesYou:rachel"],
+          "conditionalText": {
+            "isCharming": " You have such a way about you that just draws me in."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/dealer-room.jpg",
+          "backgroundTransition": "fadeToBlack",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "You spend intimate time with Rachel...",
+          "textAnimation": "fadeIn",
+          "iframe": {
+            "url": "https://www.hub.org/embed/6797755417f79",
+            "width": "90%",
+            "height": "300px",
+            "position": "center",
+            "allowFullscreen": true
+          }
+        },
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "satisfied"
+            },
+            "left": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "pleased"
+            }
+          },
+          "speaker": "Rachel",
+          "text": "That was amazing! Now, shall we head back? I'd love to introduce you to more of the casino.",
+          "conditions": ["lovesYou:rachel"],
+          "choices": [
+            {
+              "text": "Let's explore more of the casino",
+              "macros": ["improveReputation:10"],
+              "nextEvent": "new_table"
+            },
+            {
+              "text": "I'd like to find Victoria",
+              "macros": ["increaseRelationship:victoria:3"],
+              "nextEvent": "return_to_victoria"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "new_table"
+    },
+    {
+      "key": "threesome_option",
+      "title": "Bold Suggestion",
+      "editorTags": [
+        "romantic",
+        "ambitious"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "confident"
+            },
+            "left": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "surprised"
+            },
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "intrigued"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "Both of us? That's... quite bold of you.",
+          "macros": ["increaseRelationship:victoria:5"],
+          "conditions": ["lovesYou:victoria", "lovesYou:rachel"],
+          "conditionalText": {
+            "isCharming + isVIP": " But I suppose someone of your caliber deserves special treatment."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/blackjack-table.png",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "hopeful"
+            },
+            "left": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "considering"
+            },
+            "center": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "excited"
+            }
+          },
+          "speaker": "Rachel",
+          "text": "I'm game if you are, Victoria. He's certainly earned it.",
+          "macros": ["increaseRelationship:rachel:10"],
+          "conditions": ["lovesYou:rachel"],
+          "choices": [
+            {
+              "text": "Convince them both",
+              "macros": ["increaseRelationship:victoria:15", "increaseRelationship:rachel:15", "improveReputation:25", "unlockAchievement:threesome"],
+              "requiresCondition": "lovesYou:victoria",
+              "nextEvent": "group_vip_room"
+            },
+            {
+              "text": "Maybe another time",
+              "macros": ["increaseRelationship:victoria:5", "increaseRelationship:rachel:5"],
+              "nextEvent": "vip_room"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "vip_room"
+    },
+    {
+      "key": "group_vip_room",
+      "title": "Ultimate VIP Experience",
+      "editorTags": [
+        "romantic",
+        "special"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/vip-room.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "excited"
+            },
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "seductive",
+              "state": "close"
+            },
+            "left": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "seductive",
+              "state": "close"
+            }
+          },
+          "speaker": "Narrator",
+          "text": "The three of you head to the most exclusive VIP suite in the casino. This is a night you'll never forget.",
+          "macros": ["successfulDate:victoria", "successfulDate:rachel", "improveReputation:30"]
+        },
+        {
+          "background": "/assets/backgrounds/vip-room.jpg",
+          "backgroundTransition": "fadeToBlack",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "You enjoy an incredible evening with both Victoria and Rachel...",
+          "textAnimation": "fadeIn",
+          "iframe": {
+            "url": "https://www.hub.org/embed/67d2ae942fc1a",
+            "width": "90%",
+            "height": "300px",
+            "position": "center",
+            "allowFullscreen": true
+          }
+        },
+        {
+          "background": "/assets/backgrounds/vip-room.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "right": {
+              "image": "/assets/characters/player.png",
+              "name": "Player",
+              "emotion": "very-satisfied"
+            },
+            "center": {
+              "image": "/assets/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "pleased"
+            },
+            "left": {
+              "image": "/assets/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "satisfied"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "That was absolutely incredible! You're quite the man.",
+          "conditions": ["lovesYou:victoria", "lovesYou:rachel"],
+          "choices": [
+            {
+              "text": "Let's check out more of the casino",
+              "macros": ["improveReputation:20"],
+              "nextEvent": "new_table"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "new_table"
     },
     {
       "key": "vip_room",
@@ -452,7 +875,8 @@
             }
           },
           "speaker": "Narrator",
-          "text": "After winning the first game, you receive a prize: a private room where you can have an intimate encounter with Vicky. You both head into the room, and once the door closes behind you, Vicky turns to face you."
+          "text": "After winning the first game, you receive a prize: a private room where you can have an intimate encounter with Vicky. You both head into the room, and once the door closes behind you, Vicky turns to face you.",
+          "macros": ["successfulDate:victoria", "improveReputation:15"]
         },
         {
           "background": "/assets/backgrounds/vip-room.jpg",
@@ -470,7 +894,11 @@
             }
           },
           "speaker": "Narrator",
-          "text": "She takes a step closer, her eyes locked onto yours."
+          "text": "She takes a step closer, her eyes locked onto yours.",
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isCharming": " Your natural charm has clearly won her over completely."
+          }
         },
         {
           "background": "/assets/backgrounds/vip-room.jpg",
@@ -493,7 +921,11 @@
             }
           },
           "speaker": "Victoria",
-          "text": "So, how did you like the game tonight? Did you enjoy my company?"
+          "text": "So, how did you like the game tonight? Did you enjoy my company?",
+          "conditions": ["likesYou:victoria"],
+          "conditionalText": {
+            "lovesYou:victoria": " I've been looking forward to being alone with you all evening."
+          }
         },
         {
           "background": "/assets/backgrounds/vip-room.jpg",
@@ -514,7 +946,7 @@
           "text": "You spend some intimate time with Victoria in the VIP room...",
           "textAnimation": "fadeIn",
           "iframe": {
-            "url": "https://www.pornhub.org/embed/6797755417f79",
+            "url": "https://www.hub.org/embed/6797755417f79",
             "width": "90%",
             "height": "300px",
             "position": "center",
@@ -546,13 +978,20 @@
           },
           "speaker": "Victoria",
           "text": "That was lovely. Now, shall we head back to the casino floor? I'd like to introduce you to another table with some new faces.",
+          "macros": ["increaseRelationship:victoria:10"],
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isVIP": " As our VIP guest, you deserve to see everything we offer."
+          },
           "choices": [
             {
               "text": "Yes, let's check out the new table",
+              "macros": ["improveReputation:10"],
               "nextEvent": "new_table"
             },
             {
               "text": "I'd rather stay here a bit longer",
+              "macros": ["increaseRelationship:victoria:5"],
               "nextEvent": "extended_vip"
             }
           ]
@@ -584,7 +1023,12 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Oh? You want to stay longer? I think that can be arranged..."
+          "text": "Oh? You want to stay longer? I think that can be arranged...",
+          "macros": ["increaseRelationship:victoria:8"],
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isCharming": " You're quite the romantic, aren't you?"
+          }
         },
         {
           "background": "/assets/backgrounds/vip-room.jpg",
@@ -594,7 +1038,7 @@
           "text": "You spend more time with Victoria...",
           "textAnimation": "fadeIn",
           "iframe": {
-            "url": "https://www.pornhub.org/embed/6797755417f79",
+            "url": "https://www.hub.org/embed/6797755417f79",
             "width": "90%",
             "height": "300px",
             "position": "center",
@@ -618,6 +1062,8 @@
           },
           "speaker": "Victoria",
           "text": "That was wonderful, but we really should join the others now. Let me introduce you to some new games and faces.",
+          "macros": ["increaseRelationship:victoria:5", "improveReputation:5"],
+          "conditions": ["lovesYou:victoria"],
           "choices": [
             {
               "text": "Let's go to the new table",
@@ -652,7 +1098,11 @@
             }
           },
           "speaker": "Narrator",
-          "text": "Victoria takes you back to the casino floor to introduce you to the next table you can play with 2 new girls."
+          "text": "Victoria takes you back to the casino floor to introduce you to the next table you can play with 2 new girls.",
+          "conditions": ["isVIP"],
+          "conditionalText": {
+            "lovesYou:victoria": " Victoria is clearly proud to be showing off her favorite guest."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -674,7 +1124,13 @@
             }
           },
           "speaker": "Victoria",
-          "text": "This is our high-roller table. These ladies are Sophia and Jasmine. They'll take good care of you."
+          "text": "This is our high-roller table. These ladies are Sophia and Jasmine. They'll take good care of you.",
+          "macros": ["increaseRelationship:sophia:3", "increaseRelationship:jasmine:3"],
+          "conditions": ["isVIP"],
+          "conditionalText": {
+            "lovesYou:victoria": " He's very special to me, so treat him well.",
+            "isRich": " He's got excellent taste and the bankroll to match."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -696,7 +1152,13 @@
             }
           },
           "speaker": "Sophia",
-          "text": "Welcome to our VIP table. I'll be your dealer tonight."
+          "text": "Welcome to our VIP table. I'll be your dealer tonight.",
+          "macros": ["increaseRelationship:sophia:5"],
+          "conditions": ["isVIP"],
+          "conditionalText": {
+            "isRegular": " I've heard about you from the other girls.",
+            "isRich": " A pleasure to serve someone of your stature."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -718,7 +1180,12 @@
             }
           },
           "speaker": "Jasmine",
-          "text": "And I'll be assisting tonight. We've heard good things about your play style. Care to show us what you've got?"
+          "text": "And I'll be assisting tonight. We've heard good things about your play style. Care to show us what you've got?",
+          "macros": ["increaseRelationship:jasmine:5"],
+          "conditions": ["likesYou:jasmine"],
+          "conditionalText": {
+            "isCharming": " I can already tell you're going to be fun to work with."
+          }
         },
         {
           "background": "/assets/backgrounds/blackjack-table.png",
@@ -741,20 +1208,30 @@
           },
           "speaker": "Sophia",
           "text": "What stakes would you like to play today?",
+          "conditionalText": {
+            "isRich": " With your bankroll, any table is available to you.",
+            "isVIP": " As our VIP, you have access to our premium games."
+          },
           "choices": [
             {
               "text": "Medium Stakes - $500",
               "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:5"],
               "eventParams": {
                 "playerEvent": "VIP Medium Stakes",
                 "playerCost": 500,
-                "opponentIndices": [
-                  2
-                ],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 500
+                },
+                "dealers": [
                   {
-                    "name": "Sophia Dealer",
-                    "cost": 2500
+                    "name": "Sophia",
+                    "image": "/assets/characters/sophia.png",
+                    "startingMoney": 2500,
+                    "eventName": "Sophia's VIP Table",
+                    "specialties": ["VIP Service", "High Class", "Professional"]
                   }
                 ],
                 "deckCount": 4,
@@ -764,50 +1241,87 @@
             {
               "text": "High Stakes - $1000",
               "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:10"],
               "eventParams": {
                 "playerEvent": "VIP High Stakes",
                 "playerCost": 1000,
-                "opponentIndices": [
-                  2
-                ],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 1000
+                },
+                "dealers": [
                   {
-                    "name": "Sophia Dealer",
-                    "cost": 5000
+                    "name": "Sophia",
+                    "image": "/assets/characters/sophia.png",
+                    "startingMoney": 5000,
+                    "eventName": "Sophia's High Stakes VIP Table",
+                    "specialties": ["High Stakes", "VIP Service", "Vegas Rules"]
                   }
                 ],
                 "deckCount": 6,
                 "specialRules": "vegas"
               },
-              "requiresCondition": {
-                "variable": "playerMoney",
-                "operator": ">=",
-                "value": 1000
-              }
+              "requiresCondition": "hasModestFunds"
             },
             {
               "text": "Ultra Stakes - $2000",
               "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:20", "unlockAchievement:ultra_high_roller"],
               "eventParams": {
                 "playerEvent": "VIP Ultra Stakes",
                 "playerCost": 2000,
-                "opponentIndices": [
-                  2
-                ],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 2000
+                },
+                "dealers": [
                   {
-                    "name": "Sophia Dealer",
-                    "cost": 10000
+                    "name": "Jasmine",
+                    "image": "/assets/characters/jasmine.png",
+                    "startingMoney": 10000,
+                    "eventName": "Jasmine's Ultra High Stakes Elite Table",
+                    "specialties": ["Ultra Stakes", "Elite Service", "Private Room", "Exclusive"]
                   }
                 ],
                 "deckCount": 8,
                 "specialRules": "vip"
               },
-              "requiresCondition": {
-                "variable": "playerMoney",
-                "operator": ">=",
-                "value": 2000
-              }
+              "requiresCondition": "canAffordUltraStakes"
+            },
+            {
+              "text": "Exclusive Dual Dealer - $1500",
+              "action": "startGame",
+              "macros": ["addGamePlayed:blackjack", "improveReputation:25", "unlockAchievement:dual_dealer"],
+              "eventParams": {
+                "playerEvent": "Dual Dealer VIP Experience",
+                "playerCost": 1500,
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 1500
+                },
+                "dealers": [
+                  {
+                    "name": "Sophia",
+                    "image": "/assets/characters/sophia.png",
+                    "startingMoney": 3750,
+                    "eventName": "Sophia's Elite Table",
+                    "specialties": ["High Class", "Professional", "Team Play"]
+                  },
+                  {
+                    "name": "Jasmine",
+                    "image": "/assets/characters/jasmine.png",
+                    "startingMoney": 3750,
+                    "eventName": "Jasmine's Elite Table",
+                    "specialties": ["Elite Service", "Exclusive", "Team Play"]
+                  }
+                ],
+                "deckCount": 6,
+                "specialRules": "dual-dealer"
+              },
+              "requiresCondition": "isVIP"
             }
           ]
         }
@@ -834,6 +1348,7 @@
           },
           "speaker": "Sophia",
           "text": "Excellent game! {result}. Your balance is now ${money}.",
+          "macros": ["improveReputation:15"],
           "conditionalElements": {
             "winCondition": {
               "variable": "playerWon",
@@ -845,6 +1360,10 @@
               "value": false,
               "additionalText": " Better luck next time."
             }
+          },
+          "conditionalText": {
+            "isWinning": " Your winning streak continues!",
+            "isRich": " Money seems to follow you wherever you go."
           }
         },
         {
@@ -868,17 +1387,27 @@
           },
           "speaker": "Jasmine",
           "text": "You've proven yourself at our table. Would you be interested in a private game in our exclusive suite? Both Sophia and I would be your personal hosts.",
+          "macros": ["increaseRelationship:jasmine:8", "increaseRelationship:sophia:5"],
+          "conditions": ["likesYou:jasmine", "likesYou:sophia"],
+          "conditionalText": {
+            "isVIP": " Someone of your status deserves our best treatment.",
+            "lovesYou:jasmine": " I've been hoping you'd want to spend more time with us."
+          },
           "choices": [
             {
               "text": "Accept their invitation",
+              "macros": ["increaseRelationship:jasmine:15", "increaseRelationship:sophia:15", "improveReputation:25"],
+              "requiresCondition": "likesYou:jasmine",
               "nextEvent": "exclusive_suite"
             },
             {
               "text": "Play another round first",
+              "macros": ["increaseRelationship:jasmine:3", "increaseRelationship:sophia:3"],
               "nextEvent": "new_table"
             },
             {
               "text": "Return to Victoria",
+              "macros": ["increaseRelationship:victoria:8"],
               "nextEvent": "return_to_victoria"
             }
           ]
@@ -900,7 +1429,7 @@
           "characters": {
             "right": {
               "image": "/assets/characters/jasmine.png",
-              "name": "Player",
+              "name": "Jasmine",
               "emotion": "excited"
             },
             "center": {
@@ -911,11 +1440,12 @@
             "left": {
               "image": "/assets/characters/player.png",
               "name": "Player",
-              "emotion": "neutral"
+              "emotion": "excited"
             }
           },
           "speaker": "Narrator",
-          "text": "You follow Sophia and Jasmine to an exclusive suite on the top floor of the casino. The luxurious room has panoramic views of the city lights below."
+          "text": "You follow Sophia and Jasmine to an exclusive suite on the top floor of the casino. The luxurious room has panoramic views of the city lights below.",
+          "macros": ["successfulDate:jasmine", "successfulDate:sophia", "improveReputation:30", "unlockAchievement:suite_access"]
         },
         {
           "background": "/assets/backgrounds/exclusive-suite.png",
@@ -938,11 +1468,16 @@
             "left": {
               "image": "/assets/characters/jasmine.png",
               "name": "Jasmine",
-              "emotion": "neutral"
+              "emotion": "seductive"
             }
           },
           "speaker": "Sophia",
-          "text": "Welcome to our private suite. Here, we can play a more... intimate game of blackjack."
+          "text": "Welcome to our private suite. Here, we can play a more... intimate game of blackjack.",
+          "conditions": ["lovesYou:sophia"],
+          "conditionalText": {
+            "isVIP": " Only our most special guests ever see this room.",
+            "isRich": " Money can't buy this experience - but charm and skill can."
+          }
         },
         {
           "background": "/assets/backgrounds/exclusive-suite.png",
@@ -960,11 +1495,15 @@
             "left": {
               "image": "/assets/characters/jasmine.png",
               "name": "Jasmine",
-              "emotion": "neutral"
+              "emotion": "close"
             }
           },
           "speaker": "Jasmine",
-          "text": "The stakes are higher here, but so are the rewards. Shall we begin?"
+          "text": "The stakes are higher here, but so are the rewards. Shall we begin?",
+          "conditions": ["lovesYou:jasmine"],
+          "conditionalText": {
+            "isCharming": " Your charm has definitely earned you this privilege."
+          }
         },
         {
           "background": "/assets/backgrounds/exclusive-suite.png",
@@ -974,7 +1513,7 @@
           "text": "You spend the night enjoying the exclusive company of Sophia and Jasmine...",
           "textAnimation": "fadeIn",
           "iframe": {
-            "url": "https://www.pornhub.org/embed/67d2ae942fc1a",
+            "url": "https://www.hub.org/embed/67d2ae942fc1a",
             "width": "90%",
             "height": "300px",
             "position": "center",
@@ -993,6 +1532,10 @@
           },
           "speaker": "Narrator",
           "text": "The morning light streams through the windows. You find yourself alone in the luxurious suite with a note on the bedside table. It reads: 'We hope you enjoyed your visit to our casino. Come back anytime for another round of games. - V, R, S & J'",
+          "macros": ["increaseRelationship:victoria:5", "increaseRelationship:rachel:5", "increaseRelationship:sophia:10", "increaseRelationship:jasmine:10"],
+          "conditionalText": {
+            "isVIP": " P.S. Your VIP status is permanent - you'll always be welcome here."
+          },
           "choices": [
             {
               "text": "End your casino adventure",
@@ -1026,7 +1569,12 @@
             }
           },
           "speaker": "Victoria",
-          "text": "You decided to come back to me? I'm flattered."
+          "text": "You decided to come back to me? I'm flattered.",
+          "macros": ["increaseRelationship:victoria:10"],
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isCharming": " You always know how to make a girl feel special."
+          }
         },
         {
           "background": "/assets/backgrounds/casino-entrance.jpg",
@@ -1043,7 +1591,12 @@
             }
           },
           "speaker": "Victoria",
-          "text": "You know, I was hoping you'd choose me. Let me show you my personal suite - it's even nicer than theirs."
+          "text": "You know, I was hoping you'd choose me. Let me show you my personal suite - it's even nicer than theirs.",
+          "macros": ["increaseRelationship:victoria:8"],
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isVIP": " As our top VIP, you deserve to see my private quarters."
+          }
         },
         {
           "background": "/assets/backgrounds/victoria-suite.png",
@@ -1061,7 +1614,8 @@
             }
           },
           "speaker": "Narrator",
-          "text": "Victoria takes you to her personal suite, which is decorated with elegant taste and features a stunning view of the city skyline."
+          "text": "Victoria takes you to her personal suite, which is decorated with elegant taste and features a stunning view of the city skyline.",
+          "macros": ["improveReputation:20", "unlockAchievement:victoria_romance"]
         },
         {
           "background": "/assets/backgrounds/victoria-suite.png",
@@ -1084,7 +1638,11 @@
             }
           },
           "speaker": "Victoria",
-          "text": "I knew from the moment I saw you that we had a special connection. I'm glad you felt it too."
+          "text": "I knew from the moment I saw you that we had a special connection. I'm glad you felt it too.",
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isCharming": " Your charm drew me in from the very beginning."
+          }
         },
         {
           "background": "/assets/backgrounds/victoria-suite.png",
@@ -1094,7 +1652,7 @@
           "text": "You spend a passionate day with Victoria...",
           "textAnimation": "fadeIn",
           "iframe": {
-            "url": "https://www.pornhub.org/embed/65bcb431d2b9e",
+            "url": "https://www.hub.org/embed/65bcb431d2b9e",
             "width": "90%",
             "height": "300px",
             "position": "center",
@@ -1119,13 +1677,20 @@
           },
           "speaker": "Victoria",
           "text": "Last night was wonderful. I've never connected with a guest like this before. Would you like to stay another day at the casino with me?",
+          "macros": ["increaseRelationship:victoria:15"],
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isVIP": " I could arrange for you to have permanent VIP access if you'd like."
+          },
           "choices": [
             {
               "text": "Stay another day with Victoria",
+              "macros": ["increaseRelationship:victoria:10", "improveReputation:15"],
               "nextEvent": "extended_stay"
             },
             {
               "text": "End your casino adventure",
+              "macros": ["increaseRelationship:victoria:5"],
               "nextEvent": "ending"
             }
           ]
@@ -1158,7 +1723,8 @@
             }
           },
           "speaker": "Narrator",
-          "text": "You spend the next day with Victoria, enjoying the casino's private beach and exclusive amenities. Your connection grows stronger as you share personal stories and laugh together."
+          "text": "You spend the next day with Victoria, enjoying the casino's private beach and exclusive amenities. Your connection grows stronger as you share personal stories and laugh together.",
+          "macros": ["increaseRelationship:victoria:10", "improveReputation:10"]
         },
         {
           "background": "/assets/backgrounds/casino-restaurant.png",
@@ -1177,7 +1743,11 @@
             }
           },
           "speaker": "Narrator",
-          "text": "That evening, Victoria takes you to the casino's five-star restaurant for a romantic dinner. The atmosphere is perfect, and Victoria looks stunning in her evening attire."
+          "text": "That evening, Victoria takes you to the casino's five-star restaurant for a romantic dinner. The atmosphere is perfect, and Victoria looks stunning in her evening attire.",
+          "macros": ["increaseRelationship:victoria:8"],
+          "conditionalText": {
+            "lovesYou:victoria": " The way she looks at you makes it clear this is more than just a casual dinner."
+          }
         },
         {
           "background": "/assets/backgrounds/casino-balcony.png",
@@ -1200,7 +1770,12 @@
             }
           },
           "speaker": "Victoria",
-          "text": "I've never felt this way about someone I've met at the casino. Would you consider staying in touch after you leave? Perhaps we could meet again soon..."
+          "text": "I've never felt this way about someone I've met at the casino. Would you consider staying in touch after you leave? Perhaps we could meet again soon...",
+          "macros": ["increaseRelationship:victoria:15"],
+          "conditions": ["lovesYou:victoria"],
+          "conditionalText": {
+            "isCharming": " You've shown me what a real gentleman is like."
+          }
         },
         {
           "background": "/assets/backgrounds/casino-balcony.png",
@@ -1219,9 +1794,14 @@
           },
           "speaker": "Narrator",
           "text": "Victoria gives you her personal phone number and seems genuinely interested in seeing you again. You feel that your casino adventure has turned into something much more meaningful.",
+          "macros": ["increaseRelationship:victoria:20", "unlockAchievement:true_love"],
+          "conditionalText": {
+            "lovesYou:victoria": " This feels like the beginning of something beautiful."
+          },
           "choices": [
             {
               "text": "Promise to call her soon",
+              "macros": ["increaseRelationship:victoria:10"],
               "nextEvent": "special_ending"
             }
           ]
@@ -1253,6 +1833,10 @@
             "file": "reflective-theme.mp3",
             "volume": 0.4,
             "fadeIn": true
+          },
+          "conditionalText": {
+            "lovesYou:victoria": " Victoria's face keeps appearing in your mind.",
+            "isRich": " Your winnings were substantial, but the memories are priceless."
           }
         },
         {
@@ -1266,14 +1850,20 @@
             }
           },
           "speaker": "Narrator",
-          "text": "Back home, you find yourself checking your phone often, thinking about Victoria. Your winnings from the casino were nice, but the connection you made was the real jackpot."
+          "text": "Back home, you find yourself checking your phone often, thinking about Victoria. Your winnings from the casino were nice, but the connection you made was the real jackpot.",
+          "conditionalText": {
+            "lovesYou:victoria": " You've never felt this way about someone before."
+          }
         },
         {
           "background": "/assets/backgrounds/phone-screen.png",
           "backgroundTransition": "fade",
           "characters": {},
           "speaker": "Narrator",
-          "text": "Your phone lights up with a text message: 'Missing you already. The casino feels empty without you. When can I see you again? -V'"
+          "text": "Your phone lights up with a text message: 'Missing you already. The casino feels empty without you. When can I see you again? -V'",
+          "conditionalText": {
+            "lovesYou:victoria": " Your heart skips a beat reading her message."
+          }
         },
         {
           "background": "/assets/backgrounds/home-view.png",
@@ -1287,6 +1877,9 @@
           },
           "speaker": "Narrator",
           "text": "You smile as you type your reply, already planning your next trip. Some gambles in life are worth taking, and this was definitely one of them.",
+          "conditionalText": {
+            "lovesYou:victoria": " You realize this might be the beginning of the rest of your life."
+          },
           "choices": [
             {
               "text": "THE END - Start a New Game",
@@ -1326,6 +1919,10 @@
             "file": "goodbye-theme.mp3",
             "volume": 0.4,
             "fadeIn": true
+          },
+          "conditionalText": {
+            "isVIP": " As our VIP guest, you'll always have a special place here.",
+            "lovesYou:victoria": " Victoria asked me to give you her personal regards."
           }
         },
         {
@@ -1340,7 +1937,12 @@
           },
           "speaker": "Narrator",
           "text": "As you leave the casino, you reflect on your exciting night of games and encounters. Your final balance is ${money}, making your overall profit ${profit}.",
-          "textAnimation": "typewriter"
+          "textAnimation": "typewriter",
+          "conditionalText": {
+            "isWinning": " You came out ahead financially and emotionally.",
+            "lovesYou:victoria + lovesYou:rachel": " You've made some incredible connections tonight.",
+            "isVIP": " Your reputation at this casino is now legendary."
+          }
         },
         {
           "characters": {
@@ -1352,6 +1954,9 @@
           },
           "speaker": "Narrator",
           "text": "Would you like to play again?",
+          "conditionalText": {
+            "lovesYou:victoria": " Part of you is already planning your return to see Victoria again."
+          },
           "choices": [
             {
               "text": "Start a New Game",
@@ -1388,16 +1993,46 @@
       "icon": "/assets/icons/chip.png"
     },
     {
+      "id": "ultra_high_roller",
+      "title": "Ultra High Roller", 
+      "description": "Play a game with stakes of $2000 or more",
+      "icon": "/assets/icons/diamond-chip.png"
+    },
+    {
+      "id": "dual_dealer",
+      "title": "Double or Nothing",
+      "description": "Experience a dual dealer game",
+      "icon": "/assets/icons/double-chip.png"
+    },
+    {
       "id": "victoria_romance",
-      "title": "Victoria's Secret",
+      "title": "Victoria's Heart",
       "description": "Build a special connection with Victoria",
       "icon": "/assets/icons/heart.png"
+    },
+    {
+      "id": "rachel_romance",
+      "title": "Rachel's Favor",
+      "description": "Win over the charming dealer Rachel",
+      "icon": "/assets/icons/spade-heart.png"
     },
     {
       "id": "suite_access",
       "title": "Suite Dreams",
       "description": "Access the exclusive suite with Sophia and Jasmine",
       "icon": "/assets/icons/key.png"
+    },
+    {
+      "id": "threesome",
+      "title": "Triple Play",
+      "description": "Convince multiple ladies to spend time together",
+      "icon": "/assets/icons/triple-heart.png"
+    },
+    {
+      "id": "true_love",
+      "title": "True Connection",
+      "description": "Find lasting love at the casino",
+      "icon": "/assets/icons/gold-heart.png"
     }
   ]
 }

@@ -1,4 +1,4 @@
-// BlackjackGameComponent.js - Updated for money persistence
+// BlackjackGameComponent.js - Fully Data-Driven with Character Data from JSON
 import React, { useState, useEffect } from 'react';
 import BlackjackGame from './BlackjackGame';
 import Hand from './components/Hand';
@@ -11,76 +11,9 @@ const BlackjackGameComponent = ({
   onGameComplete, 
   playerData, 
   selectedCharacters,
-  numOpponents = 1, // Default to 1 opponent
-  persistentGameState = null // Add prop for persistent game state
+  numOpponents = 1,
+  persistentGameState = null
 }) => {
-  // Use provided character indices or default to first and others
-  const playerIndex = selectedCharacters?.playerIndex ?? 0;
-  const opponentIndices = selectedCharacters?.opponentIndices ?? [1];
-  
-  // Ensure we have valid player data array
-  const safePlayerData = Array.isArray(playerData) ? playerData : [];
-
-  const extractCharacterData = (eventData) => {
-  if (!eventData || !eventData.preDialog || eventData.preDialog.length === 0) {
-    return null;
-  }
-  
-  // Look through dialog entries to find any characters
-  const characters = {};
-  
-  // Check preDialog sections
-  for (const dialog of eventData.preDialog) {
-    if (dialog.characters) {
-      // Store each character position found
-      if (dialog.characters.right && !characters.right) {
-        characters.right = dialog.characters.right;
-      }
-      if (dialog.characters.left && !characters.left) {
-        characters.left = dialog.characters.left;
-      }
-      if (dialog.characters.center && !characters.center) {
-        characters.center = dialog.characters.center;
-      }
-      
-      // If we found all three positions, we can stop
-      if (characters.right && characters.left && characters.center) {
-        break;
-      }
-    }
-  }
-  
-  // If we didn't find anything in preDialog, check postDialog
-  if (Object.keys(characters).length === 0 && eventData.postDialog) {
-    for (const dialog of eventData.postDialog) {
-      if (dialog.characters) {
-        // Store each character position found
-        if (dialog.characters.right && !characters.right) {
-          characters.right = dialog.characters.right;
-        }
-        if (dialog.characters.left && !characters.left) {
-          characters.left = dialog.characters.left;
-        }
-        if (dialog.characters.center && !characters.center) {
-          characters.center = dialog.characters.center;
-        }
-        
-        // If we found all three positions, we can stop
-        if (characters.right && characters.left && characters.center) {
-          break;
-        }
-      }
-    }
-  }
-  
-  return characters;
-};
-  
-  // Ensure we have the right number of opponents
-  const adjustedOpponentIndices = opponentIndices.length >= numOpponents 
-    ? opponentIndices.slice(0, numOpponents) 
-    : [...opponentIndices, ...Array(numOpponents - opponentIndices.length).fill().map((_, i) => Math.min(i + 2, (safePlayerData.length > 0 ? safePlayerData.length - 1 : 0)))];
-
   const [game, setGame] = useState(new BlackjackGame(numOpponents));
   const [gameState, setGameState] = useState({
     playerHand: [],
@@ -92,10 +25,12 @@ const BlackjackGameComponent = ({
     betAmount: 0
   });
   
-  // State for selected events
-  const [events, setEvents] = useState({
+  // State for character and event data - all from JSON
+  const [gameData, setGameData] = useState({
+    player: null,
+    dealers: [],
     playerEvent: null,
-    opponentEvents: Array(numOpponents).fill(null)
+    gameRules: {}
   });
   
   // Game setup state
@@ -103,10 +38,10 @@ const BlackjackGameComponent = ({
   
   // Player scores
   const [scores, setScores] = useState({
-    player: 1000, // Default value
-    opponents: Array(numOpponents).fill(5000),
+    player: 1000,
+    opponents: [],
     initialPlayer: 1000,
-    initialOpponents: Array(numOpponents).fill(5000)
+    initialOpponents: []
   });
 
   // Win condition tracking
@@ -116,207 +51,123 @@ const BlackjackGameComponent = ({
   // Track current opponent count
   const [currentNumOpponents, setCurrentNumOpponents] = useState(numOpponents);
 
-  // Setup the game based on initialEvent or selections
+  // Setup the game based on initialEvent - completely data-driven
   useEffect(() => {
     if (initialEvent && initialEvent.action === 'startGame' && initialEvent.eventParams) {
       try {
         const eventParams = initialEvent.eventParams;
-  const playerCost = eventParams.playerCost || 1000;
-  const dealerCost = eventParams.dealerCost || 5000;
-  const usePlayerIndex = eventParams.playerIndex !== undefined ? eventParams.playerIndex : playerIndex;
-  
-  // Get opponent indices - either from event params or use defaults
-  let useOpponentIndices = [];
-  if (eventParams.opponentIndices && Array.isArray(eventParams.opponentIndices)) {
-    // Make a copy to avoid mutation
-    useOpponentIndices = [...eventParams.opponentIndices];
-    
-    // Set the number of opponents based on the array length
-    const numOpponents = useOpponentIndices.length;
-    setCurrentNumOpponents(numOpponents);
-  } else if (eventParams.dealerIndex !== undefined) {
-    // Backward compatibility with single dealer
-    useOpponentIndices = [eventParams.dealerIndex];
-    setCurrentNumOpponents(1);
-  } else {
-    // Default to single opponent if not specified
-    useOpponentIndices = [selectedCharacters?.dealerIndex ?? 1];
-    setCurrentNumOpponents(1);
-  }
-  
-  // Ensure we have enough opponent indices and they're all valid numbers
-  while (useOpponentIndices.length < currentNumOpponents) {
-    useOpponentIndices.push((useOpponentIndices.length % safePlayerData.length) + 1);
-  }
-  
-  // Make sure all indices are within valid range for playerData
-  useOpponentIndices = useOpponentIndices.map(index => {
-    if (typeof index !== 'number' || index < 0 || index >= safePlayerData.length) {
-      return 1; // Default to index 1 if invalid
-    }
-    return index;
-  });
-  
-  // Get character data with proper character images
-  let playerChar = { name: "Player" };
-  if (usePlayerIndex >= 0 && usePlayerIndex < safePlayerData.length) {
-    const playerEvent = safePlayerData[usePlayerIndex];
-    const eventTitle = playerEvent.title || playerEvent.key || "Player";
-    playerChar = { 
-      name: eventTitle,
-      key: playerEvent.key
-    };
-    
-    // Extract visual novel character data
-    if (playerEvent.preDialog && playerEvent.preDialog.length > 0) {
-      // Look for player character in right position
-      for (const dialog of playerEvent.preDialog) {
-        if (dialog.characters && dialog.characters.right) {
-          playerChar.image = dialog.characters.right.image;
-          playerChar.name = dialog.characters.right.name || eventTitle;
-          break;
-        }
-      }
-    }
-  }
-  
-  // For opponents, extract character data
-  const opponentChars = useOpponentIndices.map((index, i) => {
-    // Start with basic default
-    let opChar = { name: `Dealer ${i+1}` };
-    
-    if (index >= 0 && index < safePlayerData.length) {
-      const opponentEvent = safePlayerData[index];
-      const eventTitle = opponentEvent.title || opponentEvent.key || `Dealer ${i+1}`;
-      opChar = {
-        name: eventTitle,
-        key: opponentEvent.key
-      };
-      
-      // Extract visual novel character data
-      if (opponentEvent.preDialog && opponentEvent.preDialog.length > 0) {
-        // Look for dealer characters in left or center position
-        for (const dialog of opponentEvent.preDialog) {
-          if (dialog.characters) {
-            if (dialog.characters.left) {
-              opChar.image = dialog.characters.left.image;
-              opChar.name = dialog.characters.left.name || eventTitle;
-              break;
-            }
-            else if (dialog.characters.center && !dialog.characters.right) {
-              opChar.image = dialog.characters.center.image;
-              opChar.name = dialog.characters.center.name || eventTitle;
-              break;
-            }
-          }
-        }
-      }
-    }
-    
-    return opChar;
-  });
-  
-  // Create player event object with character image
-  const playerEventObj = { 
-    name: eventParams.playerEvent || "Default Event", 
-    cost: playerCost,
-    character: playerChar, // Include the character data in the event
-    image: playerChar.image // Add the image directly as well
-  };
-  
-  // Create opponent event objects with character images
-  const opponentEventObjs = useOpponentIndices.map((_, i) => {
-    return {
-      name: eventParams.opponentEvents?.[i]?.name || eventParams.dealerEvent || "Default Event",
-      cost: eventParams.opponentEvents?.[i]?.cost || dealerCost,
-      character: opponentChars[i], // Include the character data in the event
-      image: opponentChars[i].image // Add the image directly as well
-    };
-  });
-  
-  // Now set the events with all the character data included
-  setEvents({
-    playerEvent: playerEventObj,
-    opponentEvents: opponentEventObjs,
-    specialRules: eventParams.specialRules,
-    playerCharacter: playerChar,
-    opponentCharacters: opponentChars
-  });
-  
-  // Set scores based on event costs
-  setScores({
-    player: playerCost,
-    opponents: opponentEventObjs.map(e => e.cost),
-    initialPlayer: playerCost,
-    initialOpponents: opponentEventObjs.map(e => e.cost)
-  });
-  
-  // Reset win condition and hands played
-  setWinConditionMet(false);
-  setHandsPlayed(0);
-  
-  setIsGameSetup(true);
+        
+        console.log('Setting up blackjack game with eventParams:', eventParams);
+        
+        // Extract player data from JSON
+        const playerData = eventParams.player || {
+          name: "Player",
+          image: "/assets/characters/default.png",
+          startingMoney: eventParams.playerCost || 1000
+        };
+        
+        // Extract dealers data from JSON
+        const dealersData = eventParams.dealers || [{
+          name: "Dealer",
+          image: "/assets/characters/default.png", 
+          startingMoney: 5000,
+          eventName: "Default Table"
+        }];
+        
+        // Set the number of opponents based on dealers array
+        const numDealers = dealersData.length;
+        setCurrentNumOpponents(numDealers);
+        
+        // Extract game rules
+        const gameRules = {
+          deckCount: eventParams.deckCount || 1,
+          blackjackPayout: eventParams.blackjackPayout || 1.5,
+          specialRules: eventParams.specialRules || null
+        };
+        
+        console.log('Player data:', playerData);
+        console.log('Dealers data:', dealersData);
+        console.log('Game rules:', gameRules);
+        
+        // Set all game data from JSON
+        setGameData({
+          player: playerData,
+          dealers: dealersData,
+          playerEvent: {
+            name: eventParams.playerEvent || "Blackjack Game",
+            cost: eventParams.playerCost || 1000
+          },
+          gameRules: gameRules
+        });
+        
+        // Set scores based on JSON data
+        setScores({
+          player: playerData.startingMoney,
+          opponents: dealersData.map(dealer => dealer.startingMoney),
+          initialPlayer: playerData.startingMoney,
+          initialOpponents: dealersData.map(dealer => dealer.startingMoney)
+        });
+        
+        // Reset win condition and hands played
+        setWinConditionMet(false);
+        setHandsPlayed(0);
+        
+        setIsGameSetup(true);
       } catch (error) {
-        console.error("Error setting up game events:", error);
-        // Set up with default values as fallback
-        const playerCost = 1000;
-        const dealerCost = 5000;
+        console.error("Error setting up game from JSON:", error);
         
-        // Get default characters
-        const defaultPlayerCharacter = safePlayerData[playerIndex] || { name: "Player" };
-        const defaultOpponentCharacters = adjustedOpponentIndices.map(
-          index => safePlayerData[index] || { name: "Opponent" }
-        );
+        // Fallback to default values
+        const defaultPlayer = {
+          name: "Player",
+          image: "/assets/characters/default.png",
+          startingMoney: 1000
+        };
         
-        setEvents({
-          playerEvent: { name: "Default Event", cost: playerCost },
-          opponentEvents: Array(currentNumOpponents).fill().map(() => ({ name: "Default Event", cost: dealerCost })),
-          playerCharacter: defaultPlayerCharacter,
-          opponentCharacters: defaultOpponentCharacters
+        const defaultDealer = {
+          name: "Dealer",
+          image: "/assets/characters/default.png",
+          startingMoney: 5000,
+          eventName: "Default Table"
+        };
+        
+        setGameData({
+          player: defaultPlayer,
+          dealers: [defaultDealer],
+          playerEvent: { name: "Default Game", cost: 1000 },
+          gameRules: { deckCount: 1, blackjackPayout: 1.5, specialRules: null }
         });
         
         setScores({
-          player: playerCost,
-          opponents: Array(currentNumOpponents).fill(dealerCost),
-          initialPlayer: playerCost,
-          initialOpponents: Array(currentNumOpponents).fill(dealerCost)
+          player: 1000,
+          opponents: [5000],
+          initialPlayer: 1000,
+          initialOpponents: [5000]
         });
         
+        setCurrentNumOpponents(1);
         setIsGameSetup(true);
       }
     }
-  }, [initialEvent, safePlayerData, playerIndex, adjustedOpponentIndices, currentNumOpponents]);
+  }, [initialEvent]);
   
   // Update game when number of opponents changes
   useEffect(() => {
-    const newGame = new BlackjackGame(currentNumOpponents);
-    newGame.initializeDeck();
-    setGame(newGame);
-    
-    // Reset game state with new number of opponents
-    setGameState(prevState => ({
-      ...prevState,
-      opponentHands: Array(currentNumOpponents).fill().map(() => []),
-      winners: []
-    }));
-    
-    // Adjust opponent scores if needed
-    setScores(prevScores => {
-      const newScores = { ...prevScores };
+    if (currentNumOpponents > 0) {
+      const newGame = new BlackjackGame(currentNumOpponents);
+      newGame.initializeDeck();
+      setGame(newGame);
       
-      if (prevScores.opponents.length !== currentNumOpponents) {
-        const defaultOpponentScore = 5000;
-        newScores.opponents = Array(currentNumOpponents).fill(defaultOpponentScore);
-        newScores.initialOpponents = Array(currentNumOpponents).fill(defaultOpponentScore);
-      }
-      
-      return newScores;
-    });
-    
+      // Reset game state with new number of opponents
+      setGameState(prevState => ({
+        ...prevState,
+        opponentHands: Array(currentNumOpponents).fill().map(() => []),
+        winners: []
+      }));
+    }
   }, [currentNumOpponents]);
   
   useEffect(() => {
-    // Only initialize the game after events have been selected
+    // Only initialize the game after data has been loaded
     if (isGameSetup) {
       initializeGame();
     }
@@ -381,15 +232,12 @@ const BlackjackGameComponent = ({
   
   // Check if win condition is met
   const checkWinCondition = () => {
-    // Calculate how much the player has won
     const playerProfit = scores.player - scores.initialPlayer;
-    const targetProfit = scores.initialPlayer; // Win condition: double your money
+    const targetProfit = scores.initialPlayer;
         
-    // Win condition: Player has doubled their money
     if (playerProfit >= targetProfit) {
       setWinConditionMet(true);
       
-      // Small delay to let player see the final result
       setTimeout(() => {
         if (onGameComplete) {
           const finalScores = {
@@ -400,12 +248,10 @@ const BlackjackGameComponent = ({
             handsPlayed: handsPlayed
           };
           onGameComplete(`You've doubled your money! Final profit: ${playerProfit}`, finalScores);
-        }
+      }
       }, 2000);
     }
-    
-    // Lose condition: Player is out of money or can't place minimum bet
-    else if (scores.player < 5) { // Minimum bet is $5
+    else if (scores.player < 5) {
       setTimeout(() => {
         if (onGameComplete) {
           const finalScores = {
@@ -440,7 +286,6 @@ const BlackjackGameComponent = ({
 
   // Handle placing a bet
   const handlePlaceBet = (amount) => {
-    // Ensure player has enough money
     if (amount > scores.player) return;
     
     game.placeBet(amount);
@@ -459,17 +304,15 @@ const BlackjackGameComponent = ({
       const newScores = { ...prevScores };
       const playerValue = game.calculateHandValue(gameState.playerHand);
       const isBlackjack = playerValue === 21 && gameState.playerHand.length === 2;
+      const blackjackMultiplier = gameData.gameRules.blackjackPayout || 1.5;
       
-      // Process each opponent result
       winners.forEach((result, index) => {
         if (result === 'player') {
           if (isBlackjack) {
-            // Blackjack pays 3:2
-            const blackjackPayout = Math.floor(betAmount * 1.5);
+            const blackjackPayout = Math.floor(betAmount * blackjackMultiplier);
             newScores.player += blackjackPayout;
             newScores.opponents[index] -= blackjackPayout;
           } else {
-            // Regular win pays 1:1
             newScores.player += betAmount;
             newScores.opponents[index] -= betAmount;
           }
@@ -477,7 +320,6 @@ const BlackjackGameComponent = ({
           newScores.player -= betAmount;
           newScores.opponents[index] += betAmount;
         }
-        // If it's a tie, no score changes
       });
       
       return newScores;
@@ -490,54 +332,37 @@ const BlackjackGameComponent = ({
     hand.length > 0 ? game.calculateHandValue(hand) : 0
   );
 
-  // Get character data with fallbacks
-  const playerCharacter = events.playerCharacter || 
-    (safePlayerData && playerIndex < safePlayerData.length ? safePlayerData[playerIndex] : null) || 
-    { name: "Player" };
-    
-  const opponentCharacters = events.opponentCharacters || 
-    adjustedOpponentIndices.map(index => 
-      (safePlayerData && index < safePlayerData.length ? safePlayerData[index] : null) || 
-      { name: `Dealer ${index}` }
-    );
-
-  // Handle changing the number of opponents
-  const handleChangeOpponents = (num) => {
-    // Ensure valid range
-    const newNumOpponents = Math.max(1, Math.min(num, 3));
-    setCurrentNumOpponents(newNumOpponents);
-    
-    // Update game with new number of opponents
-    const updatedGame = new BlackjackGame(newNumOpponents);
-    updatedGame.initializeDeck();
-    setGame(updatedGame);
-  };
-
   // Get game results in readable format
   const getGameResults = () => {
     if (!gameState.isGameOver) return null;
     return game.getResults();
   };
 
+  // Don't render until game is set up
+  if (!isGameSetup || !gameData.player || !gameData.dealers.length) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-green-900 to-green-800 flex items-center justify-center">
+        <div className="text-white text-xl">Loading game data...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-900 to-green-800 flex flex-col p-4 overflow-hidden relative">
-      {/* Debug Info */}
+      {/* Enhanced Debug Info - Shows data from JSON */}
       {import.meta.env.DEV && (
-        <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white p-2 text-xs z-50 max-w-sm overflow-auto">
-          <div>
-            <div>Events Set: {isGameSetup ? 'Yes' : 'No'}</div>
-            <div>Player: {playerCharacter?.name || 'Player'}</div>
-            <div>Opponents: {opponentCharacters.slice(0, currentNumOpponents)
-              .map(c => c?.name || 'Opponent')
-              .join(', ')}
-            </div>
-            <div>Player Event: {events.playerEvent?.name || 'None'}</div>
-            <div>Player Cost: ${events.playerEvent?.cost || 0}</div>
-            <div>Initial Money: ${scores.initialPlayer}</div>
+        <div className="absolute top-4 left-4 bg-black bg-opacity-90 text-white p-3 text-xs z-50 max-w-sm overflow-auto rounded">
+          <div className="space-y-1">
+            <div><strong>JSON Data Debug:</strong></div>
+            <div>Player: {gameData.player?.name} (${gameData.player?.startingMoney})</div>
+            <div>Dealers: {gameData.dealers?.map(d => `${d.name} ($${d.startingMoney})`).join(', ')}</div>
+            <div>Event: {gameData.playerEvent?.name}</div>
+            <div>Deck Count: {gameData.gameRules?.deckCount}</div>
+            <div>Blackjack Payout: {gameData.gameRules?.blackjackPayout}x</div>
+            <div>Special Rules: {gameData.gameRules?.specialRules || 'None'}</div>
             <div>Current Money: ${scores.player}</div>
             <div>Profit: ${scores.player - scores.initialPlayer}</div>
             <div>Hands Played: {handsPlayed}</div>
-            <div>Win Met: {winConditionMet ? 'Yes' : 'No'}</div>
           </div>
         </div>
       )}
@@ -581,13 +406,13 @@ const BlackjackGameComponent = ({
         </div>
       )}
       
-      {/* Game setup info - only visible before game starts */}
+      {/* Game setup info - Multi-dealer notification */}
       {!gameState.betPlaced && currentNumOpponents > 1 && (
         <div className="mb-4 bg-black bg-opacity-30 p-3 rounded-lg flex justify-between items-center">
           <div className="text-white flex items-center">
             <span className="mr-2 text-yellow-300 font-bold">Playing {currentNumOpponents} Tables:</span>
             <span className="text-green-300 text-sm italic">
-              You'll play the same hand against {currentNumOpponents} different dealers simultaneously!
+              {gameData.dealers.map(d => d.name).join(', ')} - You'll play the same hand against all dealers!
             </span>
           </div>
         </div>
@@ -599,11 +424,11 @@ const BlackjackGameComponent = ({
         <div className="w-1/4 flex flex-col items-center justify-between p-2">
           <div className="flex-1 flex flex-col items-center justify-center">
             <PlayerView 
-              name={playerCharacter?.name || "Player"}
-              avatarData={playerCharacter || { name: "Player" }} 
+              name={gameData.player.name}
+              avatarData={gameData.player} 
               score={scores.player}
-              startingMoney={events.playerEvent?.cost || 1000}
-              selectedEvent={events.playerEvent}
+              startingMoney={gameData.player.startingMoney}
+              selectedEvent={gameData.playerEvent}
               profit={scores.player - scores.initialPlayer}
             />
             
@@ -620,7 +445,7 @@ const BlackjackGameComponent = ({
             )}
           </div> 
           
-          {/* Betting controls - Only show when bet isn't placed yet */}
+          {/* Betting controls */}
           {!gameState.betPlaced && (
             <div className="w-full mt-auto">
               <BettingControls 
@@ -632,7 +457,7 @@ const BlackjackGameComponent = ({
           )}
         </div>
         
-        {/* Center section - Game table with integrated controls */}
+        {/* Center section - Game table */}
         <GameTable 
           winners={gameState.winners}
           currentPlayer={gameState.currentPlayer}
@@ -648,24 +473,25 @@ const BlackjackGameComponent = ({
           gameResults={getGameResults()}
         />
         
-        {/* Right section - Opponents */}
+        {/* Right section - Dealers */}
         <div className="w-1/4 flex flex-col overflow-y-auto">
           <div className="flex-1 flex flex-col items-center justify-start w-full p-2">
-            {/* Header for multiple opponents */}
-            {currentNumOpponents > 1 && (
-              <div className="w-full bg-black bg-opacity-50 text-yellow-300 text-center font-bold rounded-t-lg py-1 mb-1">
-                {currentNumOpponents} Dealers
-              </div>
-            )}
+            {/* Show dealer(s) name prominently */}
+            <div className="w-full bg-black bg-opacity-50 text-yellow-300 text-center font-bold rounded-lg py-2 mb-2">
+              {currentNumOpponents === 1 ? 
+                `Dealer: ${gameData.dealers[0].name}` : 
+                `${currentNumOpponents} Dealers`
+              }
+            </div>
             
-            {/* Map through opponents - more compact when multiple */}
+            {/* Map through dealers from JSON data */}
             <div className={`w-full ${currentNumOpponents > 1 ? 'space-y-2' : ''}`}>
-              {opponentCharacters.slice(0, currentNumOpponents).map((opponentChar, index) => (
+              {gameData.dealers.slice(0, currentNumOpponents).map((dealer, index) => (
                 <div 
-                  key={`opponent-${index}`} 
+                  key={`dealer-${index}`} 
                   className={`w-full ${currentNumOpponents > 1 ? 'pb-2 border-b border-green-700' : ''}`}
                 >
-                  {/* Compact view for multiple opponents */}
+                  {/* Compact view for multiple dealers */}
                   {currentNumOpponents > 1 ? (
                     <div className="flex flex-col">
                       {/* Header with name and money in compact row */}
@@ -674,8 +500,8 @@ const BlackjackGameComponent = ({
                           {/* Small avatar circle */}
                           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-yellow-500 mr-2">
                             <img
-                              src={opponentChar?.profilepic || '/default-avatar.png'}
-                              alt={opponentChar?.name || `Dealer ${index + 1}`}
+                              src={dealer.image || '/default-avatar.png'}
+                              alt={dealer.name}
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.target.onerror = null;
@@ -683,19 +509,31 @@ const BlackjackGameComponent = ({
                               }}
                             />
                           </div>
-                          <span className="text-yellow-200 font-bold">{opponentChar?.name || `Dealer ${index + 1}`}</span>
+                          <span className="text-yellow-200 font-bold">{dealer.name}</span>
                         </div>
                         <div className="bg-black bg-opacity-50 px-2 py-1 rounded-full text-white text-sm">
                           ${scores.opponents[index]}
                         </div>
                       </div>
                       
+                      {/* Table name */}
+                      {dealer.eventName && (
+                        <div className="text-xs text-green-300 text-center mb-1">{dealer.eventName}</div>
+                      )}
+                      
+                      {/* Specialties */}
+                      {dealer.specialties && (
+                        <div className="text-xs text-blue-300 text-center mb-1">
+                          {dealer.specialties.join(' • ')}
+                        </div>
+                      )}
+                      
                       {/* Hand in compact mode */}
                       {gameState.betPlaced && (
                         <div className="w-full">
                           <Hand 
                             hand={gameState.opponentHands[index] || []} 
-                            hidden={!gameState.isGameOver && gameState.currentPlayer !== `opponent-${index}`} 
+                            hidden={!gameState.isGameOver} 
                             label={`Table ${index + 1}`}
                             compact={true}
                           />
@@ -704,7 +542,6 @@ const BlackjackGameComponent = ({
                               <span className="text-green-300">Value:</span>
                               <span className="text-white font-bold ml-1">{opponentValues[index]}</span>
                               
-                              {/* Show win/loss indicator for this opponent */}
                               {gameState.winners.length > index && (
                                 <span className={`ml-2 ${
                                   gameState.winners[index] === 'player' ? 'text-green-400' : 
@@ -712,8 +549,8 @@ const BlackjackGameComponent = ({
                                   'text-yellow-400'
                                 }`}>
                                   ({
-                                    gameState.winners[index] === 'player' ? 'You Won' : 
-                                    gameState.winners[index] === 'opponent' ? 'Dealer Won' : 
+                                    gameState.winners[index] === 'player' ? 'Won' : 
+                                    gameState.winners[index] === 'opponent' ? 'Lost' : 
                                     'Push'
                                   })
                                 </span>
@@ -721,30 +558,37 @@ const BlackjackGameComponent = ({
                             </div>
                           ) : (
                             <div className="bg-black bg-opacity-40 rounded-lg px-3 py-1 text-center mt-1 text-sm shadow-inner">
-                              <span className="text-red-300">Value Hidden</span>
+                              <span className="text-red-300">Hidden</span>
                             </div>
                           )}
                         </div>
                       )}
                     </div>
                   ) : (
-                    // Original full-sized view for single opponent
+                    // Full-sized view for single dealer
                     <>
                       <PlayerView 
-                        name={opponentChar?.name || `Dealer ${index + 1}`}
-                        avatarData={opponentChar || { name: `Dealer ${index + 1}` }} 
+                        name={dealer.name}
+                        avatarData={dealer} 
                         score={scores.opponents[index]}
-                        startingMoney={events.opponentEvents?.[index]?.cost || 5000}
-                        selectedEvent={events.opponentEvents?.[index]}
+                        startingMoney={dealer.startingMoney}
+                        selectedEvent={{ name: dealer.eventName }}
                         isOpponent={true}
                       />
+                      
+                      {/* Table specialties */}
+                      {dealer.specialties && (
+                        <div className="text-xs text-blue-300 text-center mb-2">
+                          {dealer.specialties.join(' • ')}
+                        </div>
+                      )}
                       
                       {gameState.betPlaced && (
                         <div className="my-3 w-full">
                           <Hand 
                             hand={gameState.opponentHands[index] || []} 
-                            hidden={!gameState.isGameOver && gameState.currentPlayer !== `opponent-${index}`} 
-                            label={`${opponentChar?.name || `Dealer ${index + 1}`}'s Hand`}
+                            hidden={!gameState.isGameOver} 
+                            label={`${dealer.name}'s Hand`}
                             compact={false}
                           />
                           {gameState.isGameOver ? (
@@ -752,7 +596,6 @@ const BlackjackGameComponent = ({
                               <span className="text-sm text-green-300">Hand Value:</span>
                               <span className="text-white text-lg font-bold ml-2">{opponentValues[index]}</span>
                               
-                              {/* Show win/loss indicator for this opponent */}
                               {gameState.winners.length > index && (
                                 <span className={`ml-2 text-sm ${
                                   gameState.winners[index] === 'player' ? 'text-green-400' : 
@@ -785,12 +628,12 @@ const BlackjackGameComponent = ({
           <div className="bg-black bg-opacity-30 rounded-lg p-4 mt-auto w-full sticky bottom-0">
             <h3 className="text-yellow-300 font-bold mb-2 text-center">BLACKJACK RULES</h3>
             <ul className="text-xs text-green-300 space-y-1">
-              <li>• Blackjack pays 3 to 2</li>
+              <li>• Blackjack pays {gameData.gameRules.blackjackPayout}x</li>
               <li>• Dealers must stand on 17 and draw to 16</li>
               <li>• Dealer wins ties except on blackjack</li>
-              <li>• No splitting or doubling down</li>
-              {events.specialRules && (
-                <li>• Special: {events.specialRules}</li>
+              <li>• {gameData.gameRules.deckCount} deck(s) in play</li>
+              {gameData.gameRules.specialRules && (
+                <li>• Special: {gameData.gameRules.specialRules}</li>
               )}
               <li className="text-yellow-200 mt-2">• Goal: Double your initial money to win!</li>
             </ul>
@@ -801,9 +644,9 @@ const BlackjackGameComponent = ({
       {/* Footer with game info */}
       <div className="mt-4 text-center text-xs text-green-400">
         &copy; 2025 Claude's Casino • Table Limits: $5 - $1,000 • 
-        {events.playerEvent?.name ? ` Event: ${events.playerEvent.name}` : ''} • 
-        {playerCharacter?.name || 'Player'} vs {opponentCharacters.slice(0, currentNumOpponents)
-          .map(c => c?.name || 'Dealer')
+        {gameData.playerEvent?.name ? ` Event: ${gameData.playerEvent.name}` : ''} • 
+        {gameData.player.name} vs {gameData.dealers.slice(0, currentNumOpponents)
+          .map(d => d.name)
           .join(', ')} • 
         Good Luck!
       </div>
