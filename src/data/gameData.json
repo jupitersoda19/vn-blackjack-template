@@ -12,6 +12,214 @@
     },
     "editorNotes": "Adult-themed casino visual novel"
   },
+  "macros": {
+    "increaseVisitCount": {
+      "description": "Increase the player's visit count to the casino",
+      "parameters": [],
+      "updates": {
+        "visitCount": "+1"
+      }
+    },
+    "improveReputation": {
+      "description": "Improve casino reputation",
+      "parameters": ["amount"],
+      "updates": {
+        "casinoReputation": "+{amount|10}"
+      }
+    },
+    "damageReputation": {
+      "description": "Damage casino reputation", 
+      "parameters": ["amount"],
+      "updates": {
+        "casinoReputation": "-{amount|5}"
+      }
+    },
+    "increaseRelationship": {
+      "description": "Increase relationship with a character",
+      "parameters": ["character", "amount"],
+      "updates": {
+        "{character}Relationship": "+{amount|5}"
+      }
+    },
+    "decreaseRelationship": {
+      "description": "Decrease relationship with a character",
+      "parameters": ["character", "amount"],
+      "updates": {
+        "{character}Relationship": "-{amount|3}"
+      }
+    },
+    "beCharming": {
+      "description": "Set charming personality and increase charm points",
+      "parameters": [],
+      "updates": {
+        "playerPersonality": "charming",
+        "charmPoints": "+2"
+      }
+    },
+    "beAggressive": {
+      "description": "Set aggressive personality",
+      "parameters": [],
+      "updates": {
+        "playerPersonality": "aggressive",
+        "aggressionPoints": "+2"
+      }
+    },
+    "beNeutral": {
+      "description": "Set neutral personality",
+      "parameters": [],
+      "updates": {
+        "playerPersonality": "neutral"
+      }
+    },
+    "addGamePlayed": {
+      "description": "Track games played",
+      "parameters": ["gameType"],
+      "updates": {
+        "gamesPlayed": "+1",
+        "{gameType}GamesPlayed": "+1"
+      }
+    },
+    "successfulDate": {
+      "description": "Complete a successful date with a character",
+      "parameters": ["character"],
+      "updates": {
+        "{character}Relationship": "+10",
+        "casinoReputation": "+5",
+        "dateCount": "+1"
+      }
+    },
+    "badImpression": {
+      "description": "Make a bad impression with a character",
+      "parameters": ["character"],
+      "updates": {
+        "{character}Relationship": "-5",
+        "casinoReputation": "-2"
+      }
+    },
+    "unlockAchievement": {
+      "description": "Unlock an achievement",
+      "parameters": ["achievement"],
+      "updates": {
+        "achievements": "push:{achievement}"
+      }
+    },
+    "addWinnings": {
+      "description": "Add casino winnings",
+      "parameters": ["amount"],
+      "updates": {
+        "playerMoney": "+{amount}",
+        "totalWinnings": "+{amount}",
+        "profit": "+{amount}"
+      }
+    },
+    "addLosses": {
+      "description": "Add casino losses",
+      "parameters": ["amount"],
+      "updates": {
+        "playerMoney": "-{amount}",
+        "totalLosses": "+{amount}",
+        "profit": "-{amount}"
+      }
+    }
+  },
+  "conditionalTemplates": {
+    "isNewbie": {
+      "variable": "visitCount",
+      "operator": "<=",
+      "value": 2,
+      "text": " You're still learning the ropes here."
+    },
+    "isRegular": {
+      "variable": "visitCount",
+      "operator": ">=",
+      "value": 5,
+      "text": " You're a familiar face around here."
+    },
+    "likesYou": {
+      "variable": "{character}Relationship",
+      "operator": ">=",
+      "value": 15,
+      "text": " {character} smiles warmly at you."
+    },
+    "lovesYou": {
+      "variable": "{character}Relationship",
+      "operator": ">=",
+      "value": 30,
+      "text": " {character} looks at you with deep affection."
+    },
+    "dislikes": {
+      "variable": "{character}Relationship",
+      "operator": "<=",
+      "value": -5,
+      "text": " {character} seems annoyed with you."
+    },
+    "hates": {
+      "variable": "{character}Relationship",
+      "operator": "<=",
+      "value": -15,
+      "text": " {character} glares at you with obvious dislike."
+    },
+    "isCharming": {
+      "variable": "playerPersonality",
+      "operator": "==",
+      "value": "charming",
+      "text": " Your charm is evident."
+    },
+    "isAggressive": {
+      "variable": "playerPersonality",
+      "operator": "==",
+      "value": "aggressive",
+      "text": " Your aggressive nature shows."
+    },
+    "isRich": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 5000,
+      "text": " Your wealth is clearly impressive."
+    },
+    "isBroke": {
+      "variable": "playerMoney",
+      "operator": "<=",
+      "value": 100,
+      "text": " You're running dangerously low on funds."
+    },
+    "hasModestFunds": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 1000,
+      "text": " You have decent funds to play with."
+    },
+    "canAffordHighStakes": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 1000,
+      "text": " You have enough for high stakes play."
+    },
+    "canAffordUltraStakes": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 2000,
+      "text": " You have enough for ultra high stakes."
+    },
+    "isVIP": {
+      "variable": "casinoReputation",
+      "operator": ">=",
+      "value": 75,
+      "text": " You're treated like casino royalty."
+    },
+    "isWinning": {
+      "variable": "profit",
+      "operator": ">",
+      "value": 0,
+      "text": " You're ahead for the night."
+    },
+    "isLosing": {
+      "variable": "profit",
+      "operator": "<",
+      "value": 0,
+      "text": " You're down for the evening."
+    }
+  },
   "events": [
     {
       "key": "intro",

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import MetadataEditor from './MetadataEditor';
 import EventsEditor from './EventsEditor';
+import MacroLibraryEditor from './MacroLibraryEditor';
 import AdvancedExport from './AdvancedExport';
 import ImportJsonModal from './ImportJsonModal';
-import AssetManager from './AssetManager'; // Import the AssetManager component
+import AssetManager from './AssetManager';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
 
@@ -21,18 +22,37 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
         textColor: "#FEF3C7"
       }
     },
+    macros: initialData.macros || {}, // New macro definitions
+    conditionalTemplates: initialData.conditionalTemplates || {}, // New conditional templates
     events: initialData.events || []
   });
   const [activeTab, setActiveTab] = useState(0);
   const [showExport, setShowExport] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [showAssetManager, setShowAssetManager] = useState(false); // New state for asset manager
+  const [showAssetManager, setShowAssetManager] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   
   const handleMetadataChange = (newMetadata) => {
     setGameData({
       ...gameData,
       metadata: newMetadata
+    });
+    setUnsavedChanges(true);
+  };
+
+  // New macro handling functions
+  const handleMacrosChange = (newMacros) => {
+    setGameData({
+      ...gameData,
+      macros: newMacros
+    });
+    setUnsavedChanges(true);
+  };
+
+  const handleConditionalTemplatesChange = (newTemplates) => {
+    setGameData({
+      ...gameData,
+      conditionalTemplates: newTemplates
     });
     setUnsavedChanges(true);
   };
@@ -57,54 +77,82 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
     switch (importOption) {
       case 'replace':
         // Replace all data
-        newGameData = { ...importedData };
+        newGameData = { 
+          metadata: importedData.metadata || {},
+          macros: importedData.macros || {},
+          conditionalTemplates: importedData.conditionalTemplates || {},
+          events: importedData.events || []
+        };
         break;
        
       case 'merge':
-        // Merge events, keep imported metadata
+        // Merge everything
         const existingEventKeys = new Set(gameData.events.map(event => event.key));
         const newEvents = [
           ...gameData.events,
-          // Filter out events with duplicate keys
           ...importedData.events.filter(event => !existingEventKeys.has(event.key))
         ];
        
         newGameData = {
           metadata: { ...importedData.metadata },
+          macros: { ...gameData.macros, ...importedData.macros },
+          conditionalTemplates: { ...gameData.conditionalTemplates, ...importedData.conditionalTemplates },
           events: newEvents
         };
         break;
        
       case 'events_only':
-        // Keep current metadata, add imported events
+        // Keep current metadata and macros, add imported events
         const currentEventKeys = new Set(gameData.events.map(event => event.key));
         const filteredNewEvents = importedData.events.filter(event => !currentEventKeys.has(event.key));
        
         newGameData = {
           metadata: { ...gameData.metadata },
+          macros: { ...gameData.macros },
+          conditionalTemplates: { ...gameData.conditionalTemplates },
           events: [...gameData.events, ...filteredNewEvents]
+        };
+        break;
+
+      case 'macros_only':
+        // Import only macros and templates
+        newGameData = {
+          metadata: { ...gameData.metadata },
+          macros: { ...gameData.macros, ...importedData.macros },
+          conditionalTemplates: { ...gameData.conditionalTemplates, ...importedData.conditionalTemplates },
+          events: [...gameData.events]
         };
         break;
        
       case 'metadata_only':
-        // Keep current events, use imported metadata
+        // Keep current events and macros, use imported metadata
         newGameData = {
           metadata: { ...importedData.metadata },
+          macros: { ...gameData.macros },
+          conditionalTemplates: { ...gameData.conditionalTemplates },
           events: [...gameData.events]
         };
         break;
        
       default:
-        // Default to replace
-        newGameData = { ...importedData };
+        newGameData = { 
+          metadata: importedData.metadata || {},
+          macros: importedData.macros || {},
+          conditionalTemplates: importedData.conditionalTemplates || {},
+          events: importedData.events || []
+        };
     }
    
     setGameData(newGameData);
     setUnsavedChanges(true);
    
-    // Switch to events tab if importing events
-    if (importOption !== 'metadata_only') {
+    // Switch to appropriate tab
+    if (importOption === 'metadata_only') {
+      setActiveTab(0);
+    } else if (importOption === 'macros_only') {
       setActiveTab(1);
+    } else if (importOption !== 'metadata_only') {
+      setActiveTab(2); // Events tab
     }
   };
   
@@ -112,6 +160,8 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
   const getStats = () => {
     return {
       totalEvents: gameData.events.length,
+      totalMacros: Object.keys(gameData.macros).length,
+      totalTemplates: Object.keys(gameData.conditionalTemplates).length,
       connectedEvents: gameData.events.filter(event =>
         event.nextEvent ||
         (event.preDialog && event.preDialog.some(dialog => dialog.choices && dialog.choices.length > 0)) ||
@@ -131,11 +181,11 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
             {unsavedChanges && <span className="ml-2 text-sm text-yellow-400">(unsaved changes)</span>}
           </h2>
           <div className="text-sm text-gray-400 mt-1">
-            {stats.totalEvents} events • {stats.connectedEvents} connected
+            {stats.totalEvents} events • {stats.totalMacros} macros • {stats.totalTemplates} templates • {stats.connectedEvents} connected
           </div>
         </div>
         <div className="flex space-x-2">
-          {/* New Asset Manager Button */}
+          {/* Asset Manager Button */}
           <button
             className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded flex items-center"
             onClick={() => setShowAssetManager(true)}
@@ -143,13 +193,13 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
             </svg>
-            View Assets
+            Assets
           </button>
           <button
             className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded flex items-center"
             onClick={() => setShowImport(true)}
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             Import
@@ -158,7 +208,7 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
             className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded flex items-center"
             onClick={() => setShowExport(true)}
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Export
@@ -167,7 +217,7 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
             className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-4 rounded flex items-center"
             onClick={handleSave}
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
             </svg>
             Save
@@ -180,6 +230,7 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
           </button>
         </div>
       </div>
+      
       <Tabs
         selectedIndex={activeTab}
         onSelect={index => setActiveTab(index)}
@@ -196,16 +247,35 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
             className="py-2 px-4 font-semibold cursor-pointer focus:outline-none"
             selectedClassName="bg-yellow-700 text-yellow-100 rounded-t"
           >
+            Macros{' '}
+            <span className="ml-1 px-1.5 py-0.5 bg-yellow-800 text-xs rounded-full">
+              {stats.totalMacros}
+            </span>
+          </Tab>
+          <Tab
+            className="py-2 px-4 font-semibold cursor-pointer focus:outline-none"
+            selectedClassName="bg-yellow-700 text-yellow-100 rounded-t"
+          >
             Events{' '}
             <span className="ml-1 px-1.5 py-0.5 bg-yellow-800 text-xs rounded-full">
               {gameData.events.length}
             </span>
           </Tab>
         </TabList>
+        
         <TabPanel>
           <MetadataEditor
             metadata={gameData.metadata}
             onMetadataChange={handleMetadataChange}
+          />
+        </TabPanel>
+
+        <TabPanel>
+          <MacroLibraryEditor
+            macros={gameData.macros}
+            conditionalTemplates={gameData.conditionalTemplates}
+            onMacrosChange={handleMacrosChange}
+            onConditionalTemplatesChange={handleConditionalTemplatesChange}
           />
         </TabPanel>
        
@@ -213,6 +283,8 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
           <EventsEditor
             events={gameData.events}
             onEventsChange={handleEventsChange}
+            availableMacros={Object.keys(gameData.macros)}
+            availableTemplates={Object.keys(gameData.conditionalTemplates)}
           />
         </TabPanel>
       </Tabs>

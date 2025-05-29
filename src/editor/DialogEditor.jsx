@@ -1,209 +1,9 @@
 import React, { useState } from 'react';
-
-// Available macro functions for dropdown
-const AVAILABLE_MACROS = [
-  'increaseRelationship',
-  'decreaseRelationship', 
-  'setRelationshipLevel',
-  'addWinnings',
-  'addLosses',
-  'beCharming',
-  'beAggressive',
-  'beNeutral',
-  'improveReputation',
-  'damageReputation',
-  'unlockAchievement',
-  'successfulDate',
-  'badImpression',
-  'increaseVisitCount',
-  'addGamePlayed'
-];
-
-// Available conditional templates
-const AVAILABLE_CONDITIONS = [
-  'likesYou',
-  'lovesYou', 
-  'dislikes',
-  'hates',
-  'isRich',
-  'isBroke',
-  'hasModestFunds',
-  'isCharming',
-  'isAggressive',
-  'isVIP',
-  'isNewbie',
-  'isRegular',
-  'isWinning',
-  'isLosing'
-];
-
-const MacroEditor = ({ macros = [], onMacrosChange }) => {
-  const [newMacro, setNewMacro] = useState('');
-  
-  const addMacro = () => {
-    if (newMacro.trim()) {
-      const updatedMacros = [...macros, newMacro.trim()];
-      onMacrosChange(updatedMacros);
-      setNewMacro('');
-    }
-  };
-  
-  const removeMacro = (index) => {
-    const updatedMacros = macros.filter((_, i) => i !== index);
-    onMacrosChange(updatedMacros);
-  };
-  
-  const updateMacro = (index, value) => {
-    const updatedMacros = [...macros];
-    updatedMacros[index] = value;
-    onMacrosChange(updatedMacros);
-  };
-  
-  return (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center">
-        <h4 className="text-yellow-500 font-semibold">Macros</h4>
-        <span className="text-xs text-gray-400">Variable updates executed when this dialog shows</span>
-      </div>
-      
-      {macros.map((macro, index) => (
-        <div key={index} className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={macro}
-            onChange={(e) => updateMacro(index, e.target.value)}
-            className="flex-1 bg-gray-700 text-white border border-yellow-600 rounded py-1 px-2 text-sm focus:outline-none focus:border-yellow-500"
-            placeholder="e.g., increaseRelationship:victoria:5"
-          />
-          <button
-            onClick={() => removeMacro(index)}
-            className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-sm"
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-      
-      <div className="flex space-x-2">
-        <input
-          type="text"
-          value={newMacro}
-          onChange={(e) => setNewMacro(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && addMacro()}
-          className="flex-1 bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm focus:outline-none focus:border-yellow-500"
-          placeholder="Add macro (e.g., beCharming)"
-        />
-        <select
-          value=""
-          onChange={(e) => e.target.value && setNewMacro(e.target.value)}
-          className="bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm focus:outline-none"
-        >
-          <option value="">Quick Add...</option>
-          {AVAILABLE_MACROS.map(macro => (
-            <option key={macro} value={macro}>{macro}</option>
-          ))}
-        </select>
-        <button
-          onClick={addMacro}
-          className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
-        >
-          Add
-        </button>
-      </div>
-      
-      <div className="text-xs text-gray-400 mt-2">
-        <strong>Examples:</strong><br/>
-        • <code>beCharming</code> - Set personality to charming<br/>
-        • <code>increaseRelationship:victoria:5</code> - Increase Victoria's relationship by 5<br/>
-        • <code>improveReputation:10</code> - Improve casino reputation by 10
-      </div>
-    </div>
-  );
-};
-
-const ConditionsEditor = ({ conditions = [], onConditionsChange }) => {
-  const [newCondition, setNewCondition] = useState('');
-  
-  const addCondition = () => {
-    if (newCondition.trim()) {
-      const updatedConditions = [...conditions, newCondition.trim()];
-      onConditionsChange(updatedConditions);
-      setNewCondition('');
-    }
-  };
-  
-  const removeCondition = (index) => {
-    const updatedConditions = conditions.filter((_, i) => i !== index);
-    onConditionsChange(updatedConditions);
-  };
-  
-  const updateCondition = (index, value) => {
-    const updatedConditions = [...conditions];
-    updatedConditions[index] = value;
-    onConditionsChange(updatedConditions);
-  };
-  
-  return (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center">
-        <h4 className="text-yellow-500 font-semibold">Conditions</h4>
-        <span className="text-xs text-gray-400">Text added when conditions are met</span>
-      </div>
-      
-      {conditions.map((condition, index) => (
-        <div key={index} className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={condition}
-            onChange={(e) => updateCondition(index, e.target.value)}
-            className="flex-1 bg-gray-700 text-white border border-yellow-600 rounded py-1 px-2 text-sm focus:outline-none focus:border-yellow-500"
-            placeholder="e.g., likesYou:victoria"
-          />
-          <button
-            onClick={() => removeCondition(index)}
-            className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-sm"
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-      
-      <div className="flex space-x-2">
-        <input
-          type="text"
-          value={newCondition}
-          onChange={(e) => setNewCondition(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && addCondition()}
-          className="flex-1 bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm focus:outline-none focus:border-yellow-500"
-          placeholder="Add condition (e.g., isRich)"
-        />
-        <select
-          value=""
-          onChange={(e) => e.target.value && setNewCondition(e.target.value)}
-          className="bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm focus:outline-none"
-        >
-          <option value="">Quick Add...</option>
-          {AVAILABLE_CONDITIONS.map(condition => (
-            <option key={condition} value={condition}>{condition}</option>
-          ))}
-        </select>
-        <button
-          onClick={addCondition}
-          className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
-        >
-          Add
-        </button>
-      </div>
-      
-      <div className="text-xs text-gray-400 mt-2">
-        <strong>Examples:</strong><br/>
-        • <code>isRich</code> - Player has lots of money<br/>
-        • <code>likesYou:victoria</code> - Victoria likes the player<br/>
-        • <code>isVIP</code> - Player has VIP status
-      </div>
-    </div>
-  );
-};
+import { 
+  UnifiedMacroEditor, 
+  UnifiedConditionEditor 
+} from './UnifiedMacroComponents';
+import ChoiceEditor from './ChoiceEditor';
 
 const ConditionalTextEditor = ({ conditionalText = {}, onConditionalTextChange }) => {
   const [newCondition, setNewCondition] = useState('');
@@ -303,7 +103,13 @@ const ConditionalTextEditor = ({ conditionalText = {}, onConditionalTextChange }
   );
 };
 
-const DialogEditor = ({ dialogSequence, onDialogChange }) => {
+const DialogEditor = ({ 
+  dialogSequence, 
+  onDialogChange, 
+  allEvents,
+  availableMacros = [],
+  availableTemplates = []
+}) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
   
   const addDialog = () => {
@@ -362,7 +168,7 @@ const DialogEditor = ({ dialogSequence, onDialogChange }) => {
     updateDialog(index, updatedDialog);
   };
   
-  // Handle macros change
+  // Handle macros change using unified component
   const handleMacrosChange = (index, macros) => {
     const updatedDialog = {
       ...dialogSequence[index],
@@ -371,7 +177,7 @@ const DialogEditor = ({ dialogSequence, onDialogChange }) => {
     updateDialog(index, updatedDialog);
   };
   
-  // Handle conditions change
+  // Handle conditions change using unified component  
   const handleConditionsChange = (index, conditions) => {
     const updatedDialog = {
       ...dialogSequence[index],
@@ -385,6 +191,15 @@ const DialogEditor = ({ dialogSequence, onDialogChange }) => {
     const updatedDialog = {
       ...dialogSequence[index],
       conditionalText: Object.keys(conditionalText).length > 0 ? conditionalText : undefined
+    };
+    updateDialog(index, updatedDialog);
+  };
+
+  // Handle choices change
+  const handleChoicesChange = (index, choices) => {
+    const updatedDialog = {
+      ...dialogSequence[index],
+      choices: choices.length > 0 ? choices : undefined
     };
     updateDialog(index, updatedDialog);
   };
@@ -423,6 +238,11 @@ const DialogEditor = ({ dialogSequence, onDialogChange }) => {
               {dialog.conditionalText && Object.keys(dialog.conditionalText).length > 0 && (
                 <span className="bg-purple-700 text-purple-200 px-2 py-1 rounded-full text-xs">
                   {Object.keys(dialog.conditionalText).length} conditional text
+                </span>
+              )}
+              {dialog.choices && dialog.choices.length > 0 && (
+                <span className="bg-orange-700 text-orange-200 px-2 py-1 rounded-full text-xs">
+                  {dialog.choices.length} choice{dialog.choices.length !== 1 ? 's' : ''}
                 </span>
               )}
             </div>
@@ -499,23 +319,97 @@ const DialogEditor = ({ dialogSequence, onDialogChange }) => {
             />
           </div>
           
-          {/* Expanded section with macros and conditions */}
+          {/* Expanded section with unified components */}
           {expandedIndex === index && (
             <div className="space-y-6 border-t border-gray-600 pt-4">
-              <MacroEditor 
+              {/* Unified Macro Editor */}
+              <UnifiedMacroEditor 
                 macros={dialog.macros || []}
                 onMacrosChange={(macros) => handleMacrosChange(index, macros)}
+                availableMacros={availableMacros}
+                compact={false}
+                title="Macros"
+                description="Variable updates executed when this dialog shows"
               />
               
-              <ConditionsEditor 
-                conditions={dialog.conditions || []}
-                onConditionsChange={(conditions) => handleConditionsChange(index, conditions)}
-              />
+              {/* Unified Conditions Editor - Multiple conditions */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-yellow-500 font-semibold">Conditions</h4>
+                  <span className="text-xs text-gray-400">Text added when conditions are met</span>
+                </div>
+                
+                {(dialog.conditions || []).map((condition, condIndex) => (
+                  <div key={condIndex} className="bg-gray-700 rounded p-3 border-l-4 border-blue-500">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <UnifiedConditionEditor
+                          condition={condition}
+                          onConditionChange={(newCondition) => {
+                            const updatedConditions = [...(dialog.conditions || [])];
+                            updatedConditions[condIndex] = newCondition;
+                            handleConditionsChange(index, updatedConditions);
+                          }}
+                          availableTemplates={availableTemplates}
+                          compact={true}
+                          title=""
+                          placeholder="e.g., likesYou:victoria"
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          const updatedConditions = (dialog.conditions || []).filter((_, i) => i !== condIndex);
+                          handleConditionsChange(index, updatedConditions);
+                        }}
+                        className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-sm ml-2"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  onClick={() => {
+                    const updatedConditions = [...(dialog.conditions || []), ''];
+                    handleConditionsChange(index, updatedConditions);
+                  }}
+                  className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
+                >
+                  Add Condition
+                </button>
+              </div>
               
               <ConditionalTextEditor 
                 conditionalText={dialog.conditionalText || {}}
                 onConditionalTextChange={(conditionalText) => handleConditionalTextChange(index, conditionalText)}
               />
+              
+              {/* Choices Editor */}
+              {dialog.choices && dialog.choices.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-yellow-500 font-semibold">Choices</h4>
+                  <ChoiceEditor
+                    choices={dialog.choices}
+                    allEvents={allEvents}
+                    onChoicesChange={(choices) => handleChoicesChange(index, choices)}
+                    availableMacros={availableMacros}
+                    availableTemplates={availableTemplates}
+                  />
+                </div>
+              )}
+              
+              {/* Add choices if none exist */}
+              {(!dialog.choices || dialog.choices.length === 0) && (
+                <div className="text-center">
+                  <button
+                    onClick={() => handleChoicesChange(index, [{ text: "New choice" }])}
+                    className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded"
+                  >
+                    Add Choices
+                  </button>
+                </div>
+              )}
               
               {/* Additional dialog properties */}
               <div className="grid grid-cols-2 gap-4">

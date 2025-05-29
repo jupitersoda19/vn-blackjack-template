@@ -43,9 +43,12 @@ const [selectedCharacters, setSelectedCharacters] = useState({
       )}
       
       {gameState === 'game' && (
-        <VisualNovelEngine
-          playerData={gameData.events}
-          selectedCharacters={selectedCharacters}
+        <VisualNovelEngine 
+          playerData={{
+            events: gameData.events,
+            macros: gameData.macros, 
+            conditionalTemplates: gameData.conditionalTemplates
+          }}
           gameMetadata={gameData.metadata}
         />
       )}

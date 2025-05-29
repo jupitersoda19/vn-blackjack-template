@@ -56,9 +56,6 @@ const DialogBox = ({
     }
     
     if (!characterData) {
-      console.log('Character data not found for:', speakerName);
-      console.log('Available dialog characters:', dialog.characters);
-      console.log('Available scene characters:', Object.keys(characters));
       return null;
     }
     

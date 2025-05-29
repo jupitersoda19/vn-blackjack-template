@@ -12,6 +12,214 @@
     },
     "editorNotes": "Testing macros, conditions, and game flow"
   },
+  "macros": {
+    "increaseVisitCount": {
+      "description": "Increase the player's visit count to the casino",
+      "parameters": [],
+      "updates": {
+        "visitCount": "+1"
+      }
+    },
+    "improveReputation": {
+      "description": "Improve casino reputation",
+      "parameters": ["amount"],
+      "updates": {
+        "casinoReputation": "+{amount|10}"
+      }
+    },
+    "damageReputation": {
+      "description": "Damage casino reputation", 
+      "parameters": ["amount"],
+      "updates": {
+        "casinoReputation": "-{amount|5}"
+      }
+    },
+    "increaseRelationship": {
+      "description": "Increase relationship with a character",
+      "parameters": ["character", "amount"],
+      "updates": {
+        "{character}Relationship": "+{amount|5}"
+      }
+    },
+    "decreaseRelationship": {
+      "description": "Decrease relationship with a character",
+      "parameters": ["character", "amount"],
+      "updates": {
+        "{character}Relationship": "-{amount|3}"
+      }
+    },
+    "beCharming": {
+      "description": "Set charming personality and increase charm points",
+      "parameters": [],
+      "updates": {
+        "playerPersonality": "charming",
+        "charmPoints": "+2"
+      }
+    },
+    "beAggressive": {
+      "description": "Set aggressive personality",
+      "parameters": [],
+      "updates": {
+        "playerPersonality": "aggressive",
+        "aggressionPoints": "+2"
+      }
+    },
+    "beNeutral": {
+      "description": "Set neutral personality",
+      "parameters": [],
+      "updates": {
+        "playerPersonality": "neutral"
+      }
+    },
+    "addGamePlayed": {
+      "description": "Track games played",
+      "parameters": ["gameType"],
+      "updates": {
+        "gamesPlayed": "+1",
+        "{gameType}GamesPlayed": "+1"
+      }
+    },
+    "successfulDate": {
+      "description": "Complete a successful date with a character",
+      "parameters": ["character"],
+      "updates": {
+        "{character}Relationship": "+10",
+        "casinoReputation": "+5",
+        "dateCount": "+1"
+      }
+    },
+    "badImpression": {
+      "description": "Make a bad impression with a character",
+      "parameters": ["character"],
+      "updates": {
+        "{character}Relationship": "-5",
+        "casinoReputation": "-2"
+      }
+    },
+    "unlockAchievement": {
+      "description": "Unlock an achievement",
+      "parameters": ["achievement"],
+      "updates": {
+        "achievements": "push:{achievement}"
+      }
+    },
+    "addWinnings": {
+      "description": "Add casino winnings",
+      "parameters": ["amount"],
+      "updates": {
+        "playerMoney": "+{amount}",
+        "totalWinnings": "+{amount}",
+        "profit": "+{amount}"
+      }
+    },
+    "addLosses": {
+      "description": "Add casino losses",
+      "parameters": ["amount"],
+      "updates": {
+        "playerMoney": "-{amount}",
+        "totalLosses": "+{amount}",
+        "profit": "-{amount}"
+      }
+    }
+  },
+  "conditionalTemplates": {
+    "isNewbie": {
+      "variable": "visitCount",
+      "operator": "<=",
+      "value": 2,
+      "text": " You're still learning the ropes here."
+    },
+    "isRegular": {
+      "variable": "visitCount",
+      "operator": ">=",
+      "value": 5,
+      "text": " You're a familiar face around here."
+    },
+    "likesYou": {
+      "variable": "{character}Relationship",
+      "operator": ">=",
+      "value": 15,
+      "text": " {character} smiles warmly at you."
+    },
+    "lovesYou": {
+      "variable": "{character}Relationship",
+      "operator": ">=",
+      "value": 30,
+      "text": " {character} looks at you with deep affection."
+    },
+    "dislikes": {
+      "variable": "{character}Relationship",
+      "operator": "<=",
+      "value": -5,
+      "text": " {character} seems annoyed with you."
+    },
+    "hates": {
+      "variable": "{character}Relationship",
+      "operator": "<=",
+      "value": -15,
+      "text": " {character} glares at you with obvious dislike."
+    },
+    "isCharming": {
+      "variable": "playerPersonality",
+      "operator": "==",
+      "value": "charming",
+      "text": " Your charm is evident."
+    },
+    "isAggressive": {
+      "variable": "playerPersonality",
+      "operator": "==",
+      "value": "aggressive",
+      "text": " Your aggressive nature shows."
+    },
+    "isRich": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 5000,
+      "text": " Your wealth is clearly impressive."
+    },
+    "isBroke": {
+      "variable": "playerMoney",
+      "operator": "<=",
+      "value": 100,
+      "text": " You're running dangerously low on funds."
+    },
+    "hasModestFunds": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 1000,
+      "text": " You have decent funds to play with."
+    },
+    "canAffordHighStakes": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 1000,
+      "text": " You have enough for high stakes play."
+    },
+    "canAffordUltraStakes": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 2000,
+      "text": " You have enough for ultra high stakes."
+    },
+    "isVIP": {
+      "variable": "casinoReputation",
+      "operator": ">=",
+      "value": 75,
+      "text": " You're treated like casino royalty."
+    },
+    "isWinning": {
+      "variable": "profit",
+      "operator": ">",
+      "value": 0,
+      "text": " You're ahead for the night."
+    },
+    "isLosing": {
+      "variable": "profit",
+      "operator": "<",
+      "value": 0,
+      "text": " You're down for the evening."
+    }
+  },
   "events": [
     {
       "key": "intro",
@@ -22,7 +230,7 @@
           "background": "/assets/backgrounds/casino-entrance.jpg",
           "characters": {},
           "speaker": "Narrator",
-          "text": "Welcome to the macro and condition test! You start with ${playerMoney}.",
+          "text": "Welcome to the macro and condition test! You start with {money}.",
           "macros": ["increaseVisitCount", "beNeutral"],
           "conditions": ["isNewbie"],
           "conditionalText": {
@@ -193,7 +401,7 @@
             }
           },
           "speaker": "Rachel",
-          "text": "Let's test money conditions! Current money: ${playerMoney}, Profit: ${profit}",
+          "text": "Let's test money conditions! Current money: {money}, Profit: ${profit}",
           "conditions": ["isRich", "hasModestFunds", "isBroke"],
           "conditionalText": {
             "isRich": " You're quite wealthy!",
@@ -252,7 +460,7 @@
             }
           },
           "speaker": "Sophia",
-          "text": "Time to test the game functionality! Current money: ${playerMoney}",
+          "text": "Time to test the game functionality! Current money: {money}",
           "macros": ["increaseRelationship:sophia:3"],
           "conditionalText": {
             "canAffordHighStakes": " You can afford high stakes!",
@@ -279,11 +487,17 @@
               "eventParams": {
                 "playerEvent": "Test Low Stakes",
                 "playerCost": 200,
-                "opponentIndices": [1],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 200
+                },
+                "dealers": [
                   {
-                    "name": "Sophia Dealer",
-                    "cost": 1000
+                    "name": "Sophia",
+                    "image": "/assets/characters/sophia.png",
+                    "startingMoney": 1000,
+                    "eventName": "Sophia's Test Table"
                   }
                 ],
                 "deckCount": 2,
@@ -297,11 +511,17 @@
               "eventParams": {
                 "playerEvent": "Test High Stakes",
                 "playerCost": 1000,
-                "opponentIndices": [1],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 1000
+                },
+                "dealers": [
                   {
-                    "name": "Sophia Dealer",
-                    "cost": 5000
+                    "name": "Sophia",
+                    "image": "/assets/characters/sophia.png",
+                    "startingMoney": 5000,
+                    "eventName": "Sophia's High Stakes Table"
                   }
                 ],
                 "deckCount": 4,
@@ -316,11 +536,17 @@
               "eventParams": {
                 "playerEvent": "Test Ultra Stakes",
                 "playerCost": 2000,
-                "opponentIndices": [1],
-                "opponentEvents": [
+                "player": {
+                  "name": "Player",
+                  "image": "/assets/characters/player.png",
+                  "startingMoney": 2000
+                },
+                "dealers": [
                   {
-                    "name": "Sophia Dealer",
-                    "cost": 10000
+                    "name": "Sophia",
+                    "image": "/assets/characters/sophia.png",
+                    "startingMoney": 10000,
+                    "eventName": "Sophia's Ultra Stakes Table"
                   }
                 ],
                 "deckCount": 6,
@@ -346,7 +572,7 @@
             }
           },
           "speaker": "Sophia",
-          "text": "Game complete! {result}. New balance: ${playerMoney}, Profit: ${profit}",
+          "text": "Game complete! {result}. New balance: {money}, Profit: ${profit}",
           "macros": ["increaseRelationship:sophia:5"],
           "conditionalElements": {
             "winCondition": {
@@ -515,7 +741,7 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Final stats - Money: ${playerMoney}, Victoria: {victoriaRelationship}, Sophia: {sophiaRelationship}, Reputation: {casinoReputation}",
+          "text": "Final stats - Money: {money}, Victoria: {victoriaRelationship}, Sophia: {sophiaRelationship}, Reputation: {casinoReputation}",
           "choices": [
             {
               "text": "Restart test",
@@ -546,7 +772,7 @@
     },
     {
       "id": "ultra_test",
-      "title": "Ultra Stakes Tester", 
+      "title": "Ultra Stakes Tester",
       "description": "Tested ultra high stakes game",
       "icon": "/assets/icons/chip.png"
     },

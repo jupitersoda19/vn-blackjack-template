@@ -1,176 +1,17 @@
 import React, { useState } from 'react';
+import { 
+  UnifiedMacroEditor, 
+  UnifiedConditionEditor, 
+  LegacyConditionEditor 
+} from './UnifiedMacroComponents';
 
-// Available macro functions for dropdown
-const AVAILABLE_MACROS = [
-  'increaseRelationship',
-  'decreaseRelationship', 
-  'setRelationshipLevel',
-  'addWinnings',
-  'addLosses',
-  'beCharming',
-  'beAggressive',
-  'beNeutral',
-  'improveReputation',
-  'damageReputation',
-  'unlockAchievement',
-  'successfulDate',
-  'badImpression',
-  'increaseVisitCount',
-  'addGamePlayed'
-];
-
-// Available conditional templates for requiresCondition
-const AVAILABLE_CONDITIONS = [
-  'likesYou',
-  'lovesYou', 
-  'dislikes',
-  'hates',
-  'isRich',
-  'isBroke',
-  'hasModestFunds',
-  'isCharming',
-  'isAggressive',
-  'isVIP',
-  'isNewbie',
-  'isRegular',
-  'isWinning',
-  'isLosing'
-];
-
-const MacroEditor = ({ macros = [], onMacrosChange, compact = false }) => {
-  const [newMacro, setNewMacro] = useState('');
-  
-  const addMacro = () => {
-    if (newMacro.trim()) {
-      const updatedMacros = [...macros, newMacro.trim()];
-      onMacrosChange(updatedMacros);
-      setNewMacro('');
-    }
-  };
-  
-  const removeMacro = (index) => {
-    const updatedMacros = macros.filter((_, i) => i !== index);
-    onMacrosChange(updatedMacros);
-  };
-  
-  const updateMacro = (index, value) => {
-    const updatedMacros = [...macros];
-    updatedMacros[index] = value;
-    onMacrosChange(updatedMacros);
-  };
-  
-  if (compact) {
-    return (
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <label className="text-yellow-400 text-sm font-bold">Macros</label>
-          <span className="text-xs text-gray-400">Actions when choice selected</span>
-        </div>
-        
-        {macros.map((macro, index) => (
-          <div key={index} className="flex items-center space-x-1">
-            <input
-              type="text"
-              value={macro}
-              onChange={(e) => updateMacro(index, e.target.value)}
-              className="flex-1 bg-gray-700 text-white border border-yellow-600 rounded py-1 px-2 text-xs focus:outline-none focus:border-yellow-500"
-              placeholder="e.g., increaseRelationship:victoria:5"
-            />
-            <button
-              onClick={() => removeMacro(index)}
-              className="bg-red-600 hover:bg-red-500 text-white px-1 py-1 rounded text-xs"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-        
-        <div className="flex space-x-1">
-          <input
-            type="text"
-            value={newMacro}
-            onChange={(e) => setNewMacro(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addMacro()}
-            className="flex-1 bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-xs focus:outline-none focus:border-yellow-500"
-            placeholder="Add macro"
-          />
-          <select
-            value=""
-            onChange={(e) => e.target.value && setNewMacro(e.target.value)}
-            className="bg-gray-700 text-white border border-gray-600 rounded py-1 px-1 text-xs focus:outline-none"
-          >
-            <option value="">+</option>
-            {AVAILABLE_MACROS.map(macro => (
-              <option key={macro} value={macro}>{macro}</option>
-            ))}
-          </select>
-          <button
-            onClick={addMacro}
-            className="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-xs"
-          >
-            Add
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center">
-        <h4 className="text-yellow-500 font-semibold">Macros</h4>
-        <span className="text-xs text-gray-400">Actions executed when this choice is selected</span>
-      </div>
-      
-      {macros.map((macro, index) => (
-        <div key={index} className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={macro}
-            onChange={(e) => updateMacro(index, e.target.value)}
-            className="flex-1 bg-gray-700 text-white border border-yellow-600 rounded py-1 px-2 text-sm focus:outline-none focus:border-yellow-500"
-            placeholder="e.g., increaseRelationship:victoria:5"
-          />
-          <button
-            onClick={() => removeMacro(index)}
-            className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded text-sm"
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-      
-      <div className="flex space-x-2">
-        <input
-          type="text"
-          value={newMacro}
-          onChange={(e) => setNewMacro(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && addMacro()}
-          className="flex-1 bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm focus:outline-none focus:border-yellow-500"
-          placeholder="Add macro (e.g., beCharming)"
-        />
-        <select
-          value=""
-          onChange={(e) => e.target.value && setNewMacro(e.target.value)}
-          className="bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm focus:outline-none"
-        >
-          <option value="">Quick Add...</option>
-          {AVAILABLE_MACROS.map(macro => (
-            <option key={macro} value={macro}>{macro}</option>
-          ))}
-        </select>
-        <button
-          onClick={addMacro}
-          className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
-        >
-          Add
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const ChoiceEditor = ({ choices, allEvents, onChoicesChange }) => {
+const ChoiceEditor = ({ 
+  choices, 
+  allEvents, 
+  onChoicesChange,
+  availableMacros = [],
+  availableTemplates = []
+}) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
   
   const addChoice = () => {
@@ -249,34 +90,10 @@ const ChoiceEditor = ({ choices, allEvents, onChoicesChange }) => {
   };
   
   // Handle legacy requiresCondition object
-  const handleLegacyConditionChange = (index, field, value) => {
-    const currentChoice = choices[index];
-    let requiresCondition = currentChoice.requiresCondition;
-    
-    // Convert string condition to object if needed
-    if (typeof requiresCondition === 'string') {
-      requiresCondition = {
-        variable: 'playerMoney',
-        operator: '>=',
-        value: 1000
-      };
-    } else if (!requiresCondition) {
-      requiresCondition = {
-        variable: 'playerMoney', 
-        operator: '>=',
-        value: 1000
-      };
-    }
-    
-    // Update the specific field
-    requiresCondition = {
-      ...requiresCondition,
-      [field]: field === 'value' ? (isNaN(parseFloat(value)) ? value : parseFloat(value)) : value
-    };
-    
+  const handleLegacyConditionChange = (index, updatedCondition) => {
     const updatedChoice = {
-      ...currentChoice,
-      requiresCondition
+      ...choices[index],
+      requiresCondition: updatedCondition
     };
     updateChoice(index, updatedChoice);
   };
@@ -400,34 +217,25 @@ const ChoiceEditor = ({ choices, allEvents, onChoicesChange }) => {
             </div>
             
             <div>
-              <label className="block text-yellow-400 text-sm font-bold mb-1">Requires Condition</label>
-              <div className="flex space-x-1">
-                <input
-                  type="text"
-                  value={typeof choice.requiresCondition === 'string' ? choice.requiresCondition : ''}
-                  onChange={(e) => handleRequiresConditionChange(index, e.target.value)}
-                  className="flex-1 bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm focus:outline-none focus:border-yellow-500"
-                  placeholder="e.g., isRich"
-                />
-                <select
-                  value=""
-                  onChange={(e) => e.target.value && handleRequiresConditionChange(index, e.target.value)}
-                  className="bg-gray-700 text-white border border-gray-600 rounded py-1 px-1 text-sm focus:outline-none"
-                >
-                  <option value="">+</option>
-                  {AVAILABLE_CONDITIONS.map(condition => (
-                    <option key={condition} value={condition}>{condition}</option>
-                  ))}
-                </select>
-              </div>
+              <UnifiedConditionEditor
+                condition={choice.requiresCondition}
+                onConditionChange={(condition) => handleRequiresConditionChange(index, condition)}
+                availableTemplates={availableTemplates}
+                compact={true}
+                title="Requires Condition"
+                placeholder="e.g., isRich or likesYou:victoria"
+              />
             </div>
           </div>
           
           {/* Compact macros display */}
-          <MacroEditor 
+          <UnifiedMacroEditor 
             macros={choice.macros || []}
             onMacrosChange={(macros) => handleMacrosChange(index, macros)}
+            availableMacros={availableMacros}
             compact={true}
+            title="Macros"
+            description="Actions when choice selected"
           />
           
           {/* Expanded section */}
@@ -436,46 +244,11 @@ const ChoiceEditor = ({ choices, allEvents, onChoicesChange }) => {
               
               {/* Legacy condition editor */}
               {choice.requiresCondition && typeof choice.requiresCondition === 'object' && (
-                <div className="space-y-2">
-                  <h4 className="text-yellow-500 font-semibold">Legacy Condition (Object Format)</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-yellow-400 text-xs font-bold mb-1">Variable</label>
-                      <input
-                        type="text"
-                        value={choice.requiresCondition.variable || ''}
-                        onChange={(e) => handleLegacyConditionChange(index, 'variable', e.target.value)}
-                        className="w-full bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-xs focus:outline-none focus:border-yellow-500"
-                        placeholder="playerMoney"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-yellow-400 text-xs font-bold mb-1">Operator</label>
-                      <select
-                        value={choice.requiresCondition.operator || '>='}
-                        onChange={(e) => handleLegacyConditionChange(index, 'operator', e.target.value)}
-                        className="w-full bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-xs focus:outline-none"
-                      >
-                        <option value=">=">&gt;=</option>
-                        <option value="<=">&lt;=</option>
-                        <option value=">">&gt;</option>
-                        <option value="<">&lt;</option>
-                        <option value="==">=</option>
-                        <option value="!=">!=</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-yellow-400 text-xs font-bold mb-1">Value</label>
-                      <input
-                        type="text"
-                        value={choice.requiresCondition.value || ''}
-                        onChange={(e) => handleLegacyConditionChange(index, 'value', e.target.value)}
-                        className="w-full bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-xs focus:outline-none focus:border-yellow-500"
-                        placeholder="1000"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <LegacyConditionEditor
+                  condition={choice.requiresCondition}
+                  onConditionChange={(updatedCondition) => handleLegacyConditionChange(index, updatedCondition)}
+                  compact={true}
+                />
               )}
               
               {/* Game parameters for startGame action */}

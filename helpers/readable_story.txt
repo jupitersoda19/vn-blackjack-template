@@ -1,0 +1,339 @@
+
+--- Casino Entrance [intro] ---
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Narrator: You step into the casino, and immediately, you're hit with the vibrant atmosphere. The sounds of laughter, music, and chips clinking against each other fill your ears.
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Narrator: You look around, taking in the sights of the various slot machines, tables, and rows of people sitting at the craps table.
+  - (If isRegular):  The staff nods in recognition as you pass by.
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Narrator: You make your way through the crowd until you see a woman standing at the entrance, dressed in a tight red dress. She turns to face you, her piercing green eyes locking onto yours.
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Narrator: She smirks and walks towards you, her hips swaying seductively.
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Victoria: Welcome to the casino, love. I'm Victoria. I'll be your hostess for the evening.
+  - (If isRegular):  Welcome back! I was hoping you'd return.
+  - (If isVIP):  Welcome back, VIP! Your usual table is ready.
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Player: Thanks, Victoria. It's nice to meet you.
+  - (If likesYou:victoria):  It's great to see you again, Victoria.
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Victoria: Please, call me Vicky. Let's get you settled in at one of our blackjack tables.
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Narrator: She leads you to a table where a beautiful blonde woman is dealing cards.
+  > Choices:
+    - Follow Victoria to the blackjack table → blackjack_table
+    - Compliment Victoria on her dress → blackjack_table
+
+
+--- The Blackjack Table [blackjack_table] ---
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Victoria: This is Rachel. She'll be dealing for you tonight.
+  - (If isCharming):  You'll love her - she's as charming as you are.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Rachel: Hi there! Welcome to our table. Can I get you started with some chips?
+  - (If isRich):  I can see you're a serious player - let's get you some premium chips.
+  - (If isRegular):  Back for more action? I like that in a player.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Player: Yeah, please. And do you have any recommendations for this game?
+  - (If isCharming):  I'd love to hear your expert advice, Rachel.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Rachel: Well, the key is to keep track of your hand value. If it gets too close to 21, you might want to hit or stand.
+  - (If isCharming):  But I have a feeling you'll do just fine.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Victoria: And don't forget to pay attention to the dealer's up card. That can help you make better decisions.
+  - (If lovesYou:victoria):  Though I'll be watching to help you out if you need it.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Narrator: You begin playing, focusing on the game as much as possible. As you continue, you can feel a growing attraction between you and Vicky, especially when she helps you out and offers words of encouragement. You also notice that Rachel seems to be flirting with you, but you try to focus on the game.
+[Scene: /assets/backgrounds/blackjack-table.png]
+Narrator: It's time to start playing. What stakes would you like to play?
+  - (If isRich):  With your bankroll, you can afford any table.
+  - (If isBroke):  You'll want to be careful with your limited funds.
+
+  > Choices:
+    - Low Stakes - $200
+    - Medium Stakes - $500
+    - High Stakes - $1000 (requires: canAffordHighStakes)
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Narrator: After an exciting game, you've won! {result}. Your current balance is now ${money}.
+  - (If isWinning):  You're on a winning streak!
+  - (If isLosing):  Better luck next time.
+  - (If isRich):  Your wealth continues to grow.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Victoria: You played wonderfully! As a special reward, I'd like to offer you a private session in our VIP room. Would you like to join me?
+  - (If lovesYou:victoria):  I've been thinking about this all evening.
+  - (If isVIP):  You deserve the royal treatment.
+
+  > Choices:
+    - Accept Victoria's invitation (requires: likesYou:victoria) → vip_room
+    - Play another round first → blackjack_table
+    - Ask Rachel what she thinks → rachel_choice
+
+
+--- Rachel's Opinion [rachel_choice] ---
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Rachel: You're asking for my opinion? How thoughtful!
+  - (If lovesYou:rachel):  I think you should follow your heart.
+  - (If isCharming):  A gentleman always asks a lady's opinion.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Rachel: Actually, I think you should spend some time with me first. I promise I can show you just as good a time.
+  > Choices:
+    - Go with Victoria as planned → vip_room
+    - Choose Rachel instead (requires: likesYou:rachel) → rachel_private_time
+    - Suggest spending time with both (requires: lovesYou:victoria) → threesome_option
+
+
+--- Private Time with Rachel [rachel_private_time] ---
+
+[Scene: /assets/backgrounds/dealer-room.jpg]
+Narrator: Rachel leads you to a private dealer's room behind the main floor. The intimate space is perfect for getting to know each other better.
+[Scene: /assets/backgrounds/dealer-room.jpg]
+Rachel: I'm so glad you chose me. Victoria's nice, but I think we have a special connection.
+  - (If isCharming):  You have such a way about you that just draws me in.
+
+[Scene: /assets/backgrounds/dealer-room.jpg]
+Narrator: You spend intimate time with Rachel...
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Rachel: That was amazing! Now, shall we head back? I'd love to introduce you to more of the casino.
+  > Choices:
+    - Let's explore more of the casino → new_table
+    - I'd like to find Victoria → return_to_victoria
+
+
+--- Bold Suggestion [threesome_option] ---
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Victoria: Both of us? That's... quite bold of you.
+  - (If isCharming + isVIP):  But I suppose someone of your caliber deserves special treatment.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Rachel: I'm game if you are, Victoria. He's certainly earned it.
+  > Choices:
+    - Convince them both (requires: lovesYou:victoria) → group_vip_room
+    - Maybe another time → vip_room
+
+
+--- Ultimate VIP Experience [group_vip_room] ---
+
+[Scene: /assets/backgrounds/vip-room.jpg]
+Narrator: The three of you head to the most exclusive VIP suite in the casino. This is a night you'll never forget.
+[Scene: /assets/backgrounds/vip-room.jpg]
+Narrator: You enjoy an incredible evening with both Victoria and Rachel...
+[Scene: /assets/backgrounds/vip-room.jpg]
+Victoria: That was absolutely incredible! You're quite the man.
+  > Choices:
+    - Let's check out more of the casino → new_table
+
+
+--- Private VIP Room [vip_room] ---
+
+[Scene: /assets/backgrounds/vip-room.jpg]
+Narrator: After winning the first game, you receive a prize: a private room where you can have an intimate encounter with Vicky. You both head into the room, and once the door closes behind you, Vicky turns to face you.
+[Scene: /assets/backgrounds/vip-room.jpg]
+Narrator: She takes a step closer, her eyes locked onto yours.
+  - (If isCharming):  Your natural charm has clearly won her over completely.
+
+[Scene: /assets/backgrounds/vip-room.jpg]
+Victoria: So, how did you like the game tonight? Did you enjoy my company?
+  - (If lovesYou:victoria):  I've been looking forward to being alone with you all evening.
+
+[Scene: /assets/backgrounds/vip-room.jpg]
+Narrator: You spend some intimate time with Victoria in the VIP room...
+[Scene: /assets/backgrounds/vip-room.jpg]
+Narrator: Time passes...
+[Scene: /assets/backgrounds/vip-room.jpg]
+Victoria: That was lovely. Now, shall we head back to the casino floor? I'd like to introduce you to another table with some new faces.
+  - (If isVIP):  As our VIP guest, you deserve to see everything we offer.
+
+  > Choices:
+    - Yes, let's check out the new table → new_table
+    - I'd rather stay here a bit longer → extended_vip
+
+
+--- Extended VIP Time [extended_vip] ---
+
+[Scene: /assets/backgrounds/vip-room.jpg]
+Victoria: Oh? You want to stay longer? I think that can be arranged...
+  - (If isCharming):  You're quite the romantic, aren't you?
+
+[Scene: /assets/backgrounds/vip-room.jpg]
+Narrator: You spend more time with Victoria...
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Victoria: That was wonderful, but we really should join the others now. Let me introduce you to some new games and faces.
+  > Choices:
+    - Let's go to the new table → new_table
+
+
+--- New Blackjack Table [new_table] ---
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Narrator: Victoria takes you back to the casino floor to introduce you to the next table you can play with 2 new girls.
+  - (If lovesYou:victoria):  Victoria is clearly proud to be showing off her favorite guest.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Victoria: This is our high-roller table. These ladies are Sophia and Jasmine. They'll take good care of you.
+  - (If lovesYou:victoria):  He's very special to me, so treat him well.
+  - (If isRich):  He's got excellent taste and the bankroll to match.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Sophia: Welcome to our VIP table. I'll be your dealer tonight.
+  - (If isRegular):  I've heard about you from the other girls.
+  - (If isRich):  A pleasure to serve someone of your stature.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Jasmine: And I'll be assisting tonight. We've heard good things about your play style. Care to show us what you've got?
+  - (If isCharming):  I can already tell you're going to be fun to work with.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Sophia: What stakes would you like to play today?
+  - (If isRich):  With your bankroll, any table is available to you.
+  - (If isVIP):  As our VIP, you have access to our premium games.
+
+  > Choices:
+    - Medium Stakes - $500
+    - High Stakes - $1000 (requires: hasModestFunds)
+    - Ultra Stakes - $2000 (requires: canAffordUltraStakes)
+    - Exclusive Dual Dealer - $1500 (requires: isVIP)
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Sophia: Excellent game! {result}. Your balance is now ${money}.
+  - (If isWinning):  Your winning streak continues!
+  - (If isRich):  Money seems to follow you wherever you go.
+
+[Scene: /assets/backgrounds/blackjack-table.png]
+Jasmine: You've proven yourself at our table. Would you be interested in a private game in our exclusive suite? Both Sophia and I would be your personal hosts.
+  - (If isVIP):  Someone of your status deserves our best treatment.
+  - (If lovesYou:jasmine):  I've been hoping you'd want to spend more time with us.
+
+  > Choices:
+    - Accept their invitation (requires: likesYou:jasmine) → exclusive_suite
+    - Play another round first → new_table
+    - Return to Victoria → return_to_victoria
+
+
+--- Exclusive VIP Suite [exclusive_suite] ---
+
+[Scene: /assets/backgrounds/exclusive-suite.png]
+Narrator: You follow Sophia and Jasmine to an exclusive suite on the top floor of the casino. The luxurious room has panoramic views of the city lights below.
+[Scene: /assets/backgrounds/exclusive-suite.png]
+Sophia: Welcome to our private suite. Here, we can play a more... intimate game of blackjack.
+  - (If isVIP):  Only our most special guests ever see this room.
+  - (If isRich):  Money can't buy this experience - but charm and skill can.
+
+[Scene: /assets/backgrounds/exclusive-suite.png]
+Jasmine: The stakes are higher here, but so are the rewards. Shall we begin?
+  - (If isCharming):  Your charm has definitely earned you this privilege.
+
+[Scene: /assets/backgrounds/exclusive-suite.png]
+Narrator: You spend the night enjoying the exclusive company of Sophia and Jasmine...
+[Scene: /assets/backgrounds/exclusive-suite.png]
+Narrator: The morning light streams through the windows. You find yourself alone in the luxurious suite with a note on the bedside table. It reads: 'We hope you enjoyed your visit to our casino. Come back anytime for another round of games. - V, R, S & J'
+  - (If isVIP):  P.S. Your VIP status is permanent - you'll always be welcome here.
+
+  > Choices:
+    - End your casino adventure → ending
+
+
+--- Return to Victoria [return_to_victoria] ---
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Victoria: You decided to come back to me? I'm flattered.
+  - (If isCharming):  You always know how to make a girl feel special.
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Victoria: You know, I was hoping you'd choose me. Let me show you my personal suite - it's even nicer than theirs.
+  - (If isVIP):  As our top VIP, you deserve to see my private quarters.
+
+[Scene: /assets/backgrounds/victoria-suite.png]
+Narrator: Victoria takes you to her personal suite, which is decorated with elegant taste and features a stunning view of the city skyline.
+[Scene: /assets/backgrounds/victoria-suite.png]
+Victoria: I knew from the moment I saw you that we had a special connection. I'm glad you felt it too.
+  - (If isCharming):  Your charm drew me in from the very beginning.
+
+[Scene: /assets/backgrounds/victoria-suite.png]
+Narrator: You spend a passionate day with Victoria...
+[Scene: /assets/backgrounds/victoria-suite.png]
+Victoria: Last night was wonderful. I've never connected with a guest like this before. Would you like to stay another day at the casino with me?
+  - (If isVIP):  I could arrange for you to have permanent VIP access if you'd like.
+
+  > Choices:
+    - Stay another day with Victoria → extended_stay
+    - End your casino adventure → ending
+
+
+--- Extended Stay with Victoria [extended_stay] ---
+
+[Scene: /assets/backgrounds/casino-beach.png]
+Narrator: You spend the next day with Victoria, enjoying the casino's private beach and exclusive amenities. Your connection grows stronger as you share personal stories and laugh together.
+[Scene: /assets/backgrounds/casino-restaurant.png]
+Narrator: That evening, Victoria takes you to the casino's five-star restaurant for a romantic dinner. The atmosphere is perfect, and Victoria looks stunning in her evening attire.
+  - (If lovesYou:victoria):  The way she looks at you makes it clear this is more than just a casual dinner.
+
+[Scene: /assets/backgrounds/casino-balcony.png]
+Victoria: I've never felt this way about someone I've met at the casino. Would you consider staying in touch after you leave? Perhaps we could meet again soon...
+  - (If isCharming):  You've shown me what a real gentleman is like.
+
+[Scene: /assets/backgrounds/casino-balcony.png]
+Narrator: Victoria gives you her personal phone number and seems genuinely interested in seeing you again. You feel that your casino adventure has turned into something much more meaningful.
+  - (If lovesYou:victoria):  This feels like the beginning of something beautiful.
+
+  > Choices:
+    - Promise to call her soon → special_ending
+
+
+--- A New Beginning [special_ending] ---
+
+[Scene: /assets/backgrounds/airport.png]
+Narrator: As your plane takes off, you reflect on your unexpected adventure at the casino. What started as a simple game of blackjack turned into something you'll never forget.
+  - (If lovesYou:victoria):  Victoria's face keeps appearing in your mind.
+  - (If isRich):  Your winnings were substantial, but the memories are priceless.
+
+[Scene: /assets/backgrounds/home-view.png]
+Narrator: Back home, you find yourself checking your phone often, thinking about Victoria. Your winnings from the casino were nice, but the connection you made was the real jackpot.
+  - (If lovesYou:victoria):  You've never felt this way about someone before.
+
+[Scene: /assets/backgrounds/phone-screen.png]
+Narrator: Your phone lights up with a text message: 'Missing you already. The casino feels empty without you. When can I see you again? -V'
+  - (If lovesYou:victoria):  Your heart skips a beat reading her message.
+
+[Scene: /assets/backgrounds/home-view.png]
+Narrator: You smile as you type your reply, already planning your next trip. Some gambles in life are worth taking, and this was definitely one of them.
+  - (If lovesYou:victoria):  You realize this might be the beginning of the rest of your life.
+
+  > Choices:
+    - THE END - Start a New Game → intro
+    - Exit Game
+
+
+--- Game Conclusion [ending] ---
+
+[Scene: /assets/backgrounds/casino-entrance.jpg]
+Casino Manager: Thank you for visiting our casino! We hope you enjoyed your time with our lovely hostesses. Please come back soon for more exciting games and experiences.
+  - (If isVIP):  As our VIP guest, you'll always have a special place here.
+  - (If lovesYou:victoria):  Victoria asked me to give you her personal regards.
+
+[Scene: /assets/backgrounds/casino-exterior-night.png]
+Narrator: As you leave the casino, you reflect on your exciting night of games and encounters. Your final balance is ${money}, making your overall profit ${profit}.
+  - (If isWinning):  You came out ahead financially and emotionally.
+  - (If lovesYou:victoria + lovesYou:rachel):  You've made some incredible connections tonight.
+  - (If isVIP):  Your reputation at this casino is now legendary.
+
+Narrator: Would you like to play again?
+  - (If lovesYou:victoria):  Part of you is already planning your return to see Victoria again.
+
+  > Choices:
+    - Start a New Game → intro
+    - Exit Game
