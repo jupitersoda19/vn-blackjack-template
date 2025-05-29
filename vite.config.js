@@ -13,7 +13,12 @@ export default defineConfig({
     host: '0.0.0.0',  // Allow external connections
     port: 5173,
     strictPort: true,
-    origin: 'http://0.0.0.0:5173'
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '.serveo.net',  // Allow all serveo.net subdomains
+      'blackjack.serveo.net'  // Specific subdomain if needed
+    ]
   },
   preview: {
     host: '0.0.0.0',
