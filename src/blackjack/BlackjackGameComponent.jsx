@@ -1,4 +1,4 @@
-// BlackjackGameComponent.js - Streamlined version with fixed perk loading
+// BlackjackGameComponent.js - Cleaned with consistent design system
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import BlackjackGame from './BlackjackGame';
 import GameUI from './components/GameUI';
@@ -131,7 +131,7 @@ const BlackjackGameComponent = ({
         player: prev.player + bonus
       }));
       
-      setGameMessage(`💰 Starting bonus: +$${bonus}`);
+      setGameMessage(`Starting bonus: +$${bonus}`);
       setMessageType('success');
     }
   }, [combinedPerkEffects.startingMoney, roundInfo.totalHandsPlayed, scores.player, scores.initialPlayer]);
@@ -144,7 +144,7 @@ const BlackjackGameComponent = ({
       setScores(prev => ({ ...prev, player: prev.player + bailoutAmount }));
       useBailout();
       
-      setGameMessage(`🆘 Emergency bailout: +$${bailoutAmount}`);
+      setGameMessage(`Emergency bailout: +$${bailoutAmount}`);
       setMessageType('success');
     }
   }, [scores.player, stats, perkInfo, useBailout]);
@@ -158,7 +158,7 @@ const BlackjackGameComponent = ({
     }
     
     if (selectedPerks.length > 0) {
-      setGameMessage(`✨ Added ${selectedPerks.length} perk${selectedPerks.length > 1 ? 's' : ''}`);
+      setGameMessage(`Added ${selectedPerks.length} perk${selectedPerks.length > 1 ? 's' : ''}`);
       setMessageType('success');
     }
     
@@ -218,20 +218,20 @@ const BlackjackGameComponent = ({
     }
     
     if (amount < effectiveMinBet) {
-      setGameMessage(`❌ Minimum bet is $${effectiveMinBet}`);
+      setGameMessage(`Minimum bet is $${effectiveMinBet}`);
       setMessageType('error');
       return;
     }
     
     if (amount > scores.player && !options.isFreeBet) {
-      setGameMessage(`❌ Insufficient funds. You have $${scores.player}`);
+      setGameMessage(`Insufficient funds. You have $${scores.player}`);
       setMessageType('error');
       return;
     }
     
     if (options.isFreeBet) {
       useFreeBet();
-      setGameMessage(`🎯 Using free bet of $${amount}`);
+      setGameMessage(`Using free bet of $${amount}`);
       setMessageType('success');
     }
     
@@ -307,7 +307,7 @@ const BlackjackGameComponent = ({
           if (newScores.opponents[index]) newScores.opponents[index] -= totalWin;
           
           updateStats('win', totalWin, isBlackjack, hasActivePerks);
-          setGameMessage(`🎉 Won $${totalWin}${bonusAmount > 0 ? ` (+$${bonusAmount} bonuses)` : ''}`);
+          setGameMessage(`Won $${totalWin}${bonusAmount > 0 ? ` (+$${bonusAmount} bonuses)` : ''}`);
           setMessageType('success');
           
         } else if (result === 'opponent') {
@@ -327,7 +327,7 @@ const BlackjackGameComponent = ({
           }
           
           updateStats('loss', lossAmount, false, hasActivePerks);
-          setGameMessage(`😞 Lost $${isFreeBet ? 0 : lossAmount}${isFreeBet ? ' (Free bet!)' : ''}`);
+          setGameMessage(`Lost $${isFreeBet ? 0 : lossAmount}${isFreeBet ? ' (Free bet!)' : ''}`);
           setMessageType(isFreeBet ? 'info' : 'error');
           
         } else {
@@ -338,7 +338,7 @@ const BlackjackGameComponent = ({
           }
           
           updateStats('push', 0, false, hasActivePerks);
-          setGameMessage(`🤝 Push${bonusAmount > 0 ? ` +$${bonusAmount}` : ''}`);
+          setGameMessage(`Push${bonusAmount > 0 ? ` +$${bonusAmount}` : ''}`);
           setMessageType('info');
         }
       });
@@ -404,7 +404,7 @@ const BlackjackGameComponent = ({
   const handleSplit = useCallback(() => {
     if (game.playerSplit()) {
       updateGameState(game);
-      setGameMessage('✂️ Hand split!');
+      setGameMessage('Hand split!');
       setMessageType('info');
     }
   }, [game, updateGameState]);
@@ -413,14 +413,14 @@ const BlackjackGameComponent = ({
     const amount = game.takeInsurance();
     if (amount >= 0) {
       updateGameState(game);
-      setGameMessage(`📋 Insurance taken: $${amount}`);
+      setGameMessage(`Insurance taken: $${amount}`);
       setMessageType('info');
     }
   }, [game, updateGameState]);
 
   const handleUndo = useCallback(() => {
     if (!game.canUndo()) {
-      setGameMessage('❌ Cannot undo');
+      setGameMessage('Cannot undo');
       setMessageType('error');
       return;
     }
@@ -429,17 +429,17 @@ const BlackjackGameComponent = ({
     
     if (result.success) {
       updateGameState(game);
-      setGameMessage(`⏰ ${result.message}`);
+      setGameMessage(result.message);
       setMessageType('success');
     } else {
-      setGameMessage(`❌ ${result.message}`);
+      setGameMessage(result.message);
       setMessageType('error');
     }
   }, [game, updateGameState]);
 
   const handleNewGame = useCallback(() => {
     initializeGame();
-    setGameMessage('🆕 New game started');
+    setGameMessage('New game started');
     setMessageType('info');
   }, [initializeGame]);
 
@@ -475,14 +475,14 @@ const BlackjackGameComponent = ({
       initialOpponents: [...scores.initialOpponents]
     });
     initializeGame();
-    setGameMessage('🔄 Session reset');
+    setGameMessage('Session reset');
     setMessageType('info');
   }, [game, roundInfo, resetStats, scores.initialPlayer, scores.initialOpponents, initializeGame]);
 
   // Show perk selector
   if (roundInfo.showPerkSelector && isGameSetup) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-900 to-green-800">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
         <PerkSelector
           onPerksSelected={handlePerksSelected}
           onSkip={handleSkipPerks}
@@ -499,15 +499,15 @@ const BlackjackGameComponent = ({
   // Loading screen
   if (!isGameSetup) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-900 to-green-800 flex items-center justify-center">
-        <div className="text-white text-xl">Loading game...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-slate-100 text-xl font-medium">Loading game...</div>
       </div>
     );
   }
 
   // Main game UI
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-900 to-green-800 flex flex-col relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col relative">
       
       {/* Perks info bar */}
       <PerksInfoBar
@@ -520,14 +520,14 @@ const BlackjackGameComponent = ({
       
       {/* Game messages */}
       {gameMessage && (
-        <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg text-white font-bold shadow-lg transition-all duration-300 ${
-          messageType === 'success' ? 'bg-green-600' :
+        <div className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg text-white font-medium shadow-lg transition-all duration-300 ${
+          messageType === 'success' ? 'bg-emerald-600' :
           messageType === 'error' ? 'bg-red-600' : 'bg-blue-600'
         }`}>
           {gameMessage}
           <button 
             onClick={() => setGameMessage('')}
-            className="ml-3 text-white hover:text-gray-200"
+            className="ml-4 text-white hover:text-slate-200 text-lg font-bold"
           >
             ×
           </button>
@@ -542,8 +542,8 @@ const BlackjackGameComponent = ({
       />
       
       {/* Main game area */}
-      <div className="flex-1 p-4" style={{ 
-        paddingTop: hasActivePerks ? '80px' : '20px'
+      <div className="flex-1" style={{ 
+        paddingTop: hasActivePerks ? '48px' : '0px'
       }}>
         
         <GameUI

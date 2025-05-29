@@ -9,13 +9,13 @@ const GameUI = ({
   gameState,
   gameData,
   scores,
-  handsPlayed, // Legacy prop - can be removed if not used elsewhere
+  handsPlayed,
   winConditionMet,
   currentNumOpponents,
   activePerks,
   perkEffects,
   perkInfo,
-  roundInfo, // NEW: Round management info
+  roundInfo,
   onPlaceBet,
   onHit,
   onStand,
@@ -143,44 +143,6 @@ const GameUI = ({
           game={game}
         />
       </div>
-      
-      {/* Round Progress Bar (non-intrusive) */}
-      {roundInfo && (
-        <div className="mb-4 bg-black bg-opacity-30 p-2 rounded-lg">
-          <div className="flex justify-between items-center text-sm">
-            <div className="text-white">
-              <span className="text-yellow-300 font-bold">Round {roundInfo.currentPerkRound || 1}</span>
-              <span className="text-gray-300 ml-2">
-                Hand {roundInfo.totalHandsPlayed || 0} • {roundInfo.handsUntilNextPerkRound || 0} until next perks
-              </span>
-            </div>
-            
-            {/* Round progress indicator */}
-            <div className="flex-1 mx-4">
-              <div className="bg-gray-700 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-yellow-500 to-green-500 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${Math.max(0, Math.min(100, ((3 - (roundInfo.handsUntilNextPerkRound || 0)) / 3) * 100))}%` 
-                  }}
-                />
-              </div>
-            </div>
-            
-            <div className="text-xs text-gray-300">
-              {perksActive ? (
-                <span className="text-purple-300">
-                  🎯 {activePerks?.length || 0} Perk{(activePerks?.length || 0) !== 1 ? 's' : ''} Active
-                </span>
-              ) : (
-                <span>
-                  {roundInfo?.handsUntilNextPerkRound === 0 ? 'Perk Selection Available!' : 'No Active Perks'}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Footer - Enhanced with round info */}
       <GameFooter 

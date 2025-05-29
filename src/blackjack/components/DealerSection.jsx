@@ -47,7 +47,6 @@ const DealerSection = ({
         <ul className="text-xs text-green-300 space-y-1">
           <li>• Blackjack pays {gameData?.gameRules?.blackjackPayout || '1.5'}x</li>
           <li>• Dealers must stand on 17 and draw to 16</li>
-          <li>• Dealer wins ties except on blackjack</li>
           <li>• {gameData?.gameRules?.deckCount || '1'} deck(s) in play</li>
           {gameData?.gameRules?.specialRules && (
             <li>• Special: {gameData.gameRules.specialRules}</li>

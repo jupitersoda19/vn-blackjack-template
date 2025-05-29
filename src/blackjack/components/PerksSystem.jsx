@@ -1,4 +1,4 @@
-// components/PerksSystem.js - Streamlined perk system components
+// components/PerksSystem.js - Cleaned with consistent design system
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { PERK_DEFINITIONS, PerkUtils } from '../../data/PerkDefinitions';
 
@@ -6,7 +6,56 @@ import { PERK_DEFINITIONS, PerkUtils } from '../../data/PerkDefinitions';
 export { useRoundManagement, usePerkEffects, usePlayerStats } from '../hooks/perkHooks';
 export { usePerkInfo } from '../hooks/usePerkInfo';
 
-// Streamlined Perk Selector
+// Design System Constants
+const SPACING = {
+  xs: '0.25rem',    // 4px
+  sm: '0.5rem',     // 8px
+  md: '1rem',       // 16px
+  lg: '1.5rem',     // 24px
+  xl: '2rem',       // 32px
+  xxl: '3rem',      // 48px
+};
+
+const COLORS = {
+  primary: {
+    50: 'rgb(248 250 252)',   // slate-50
+    100: 'rgb(241 245 249)',  // slate-100
+    200: 'rgb(226 232 240)',  // slate-200
+    700: 'rgb(51 65 85)',     // slate-700
+    800: 'rgb(30 41 59)',     // slate-800
+    900: 'rgb(15 23 42)',     // slate-900
+  },
+  accent: {
+    400: 'rgb(34 197 94)',    // green-500
+    500: 'rgb(34 197 94)',    // green-500
+    600: 'rgb(22 163 74)',    // green-600
+  },
+  warning: {
+    400: 'rgb(251 191 36)',   // amber-400
+    500: 'rgb(245 158 11)',   // amber-500
+    600: 'rgb(217 119 6)',    // amber-600
+  },
+  error: {
+    500: 'rgb(239 68 68)',    // red-500
+    600: 'rgb(220 38 38)',    // red-600
+  },
+  info: {
+    500: 'rgb(59 130 246)',   // blue-500
+    600: 'rgb(37 99 235)',    // blue-600
+  }
+};
+
+const TEXT_SIZES = {
+  xs: 'text-xs',       // 12px
+  sm: 'text-sm',       // 14px
+  base: 'text-base',   // 16px
+  lg: 'text-lg',       // 18px
+  xl: 'text-xl',       // 20px
+  '2xl': 'text-2xl',   // 24px
+  '3xl': 'text-3xl',   // 30px
+};
+
+// Cleaned Perk Selector
 export const PerkSelector = ({ 
   onPerksSelected, 
   playerStats = {}, 
@@ -72,16 +121,18 @@ export const PerkSelector = ({
   }, [availablePerks]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-b from-green-900 to-green-800 rounded-xl p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-yellow-500">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50" style={{ padding: SPACING.md }}>
+      <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 w-full max-w-6xl max-h-[90vh] overflow-y-auto" style={{ padding: SPACING.xl }}>
         
         {/* Header */}
-        <div className="text-center mb-6">
-          <h2 className="text-4xl font-bold text-yellow-300 mb-2 animate-pulse">
-            🎰 Perk Round {currentRound} 🎰
+        <div className="text-center" style={{ marginBottom: SPACING.xl }}>
+          <h2 className={`${TEXT_SIZES['3xl']} font-bold text-amber-400 mb-3`}>
+            Perk Round {currentRound}
           </h2>
-          <p className="text-green-300 text-lg">Select up to {maxPerks} perks to ADD to your collection</p>
-          <div className="text-sm text-gray-300 mt-2 flex justify-center items-center space-x-4">
+          <p className={`${TEXT_SIZES.lg} text-slate-300`}>
+            Select up to {maxPerks} perks to add to your collection
+          </p>
+          <div className={`${TEXT_SIZES.sm} text-slate-400 flex justify-center items-center space-x-4`} style={{ marginTop: SPACING.sm }}>
             <span>Selected: {selectedPerks.length}/{maxPerks}</span>
             <span>•</span>
             <span>New perks last 3 hands</span>
@@ -91,20 +142,21 @@ export const PerkSelector = ({
           
           {/* Existing perks */}
           {existingPerks.length > 0 && (
-            <div className="mt-4 p-4 bg-purple-900 bg-opacity-60 rounded-lg border border-purple-500">
-              <div className="text-sm font-bold text-purple-300 mb-3">
-                📋 Currently Active Perks ({existingPerks.length}):
+            <div className="bg-slate-700 bg-opacity-60 rounded-lg border border-slate-600" style={{ marginTop: SPACING.lg, padding: SPACING.lg }}>
+              <div className={`${TEXT_SIZES.sm} font-semibold text-slate-300 mb-3`}>
+                Currently Active Perks ({existingPerks.length}):
               </div>
               <div className="flex flex-wrap justify-center gap-2">
                 {existingPerks.map((perk, index) => (
                   <div 
                     key={`${perk.id}-${index}`}
-                    className="relative text-xs bg-purple-700 text-white px-3 py-2 rounded-full border border-purple-400"
+                    className={`relative ${TEXT_SIZES.xs} bg-slate-600 text-white rounded-full border border-slate-500`}
+                    style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}
                     title={`${perk.description} (${perk.handsRemaining || '?'} hands remaining)`}
                   >
                     {perk.icon} {perk.name}
                     {perk.handsRemaining !== undefined && (
-                      <span className={`absolute -top-1 -right-1 rounded-full text-xs w-5 h-5 flex items-center justify-center ${
+                      <span className={`absolute -top-1 -right-1 rounded-full ${TEXT_SIZES.xs} w-5 h-5 flex items-center justify-center ${
                         perk.handsRemaining <= 1 ? 'bg-red-600' : 'bg-blue-600'
                       } text-white`}>
                         {perk.handsRemaining}
@@ -118,24 +170,24 @@ export const PerkSelector = ({
         </div>
 
         {/* Tier Legend */}
-        <div className="flex justify-center mb-6 space-x-6 text-sm bg-black bg-opacity-40 p-3 rounded-lg">
-          <span className="text-gray-400 flex items-center">⚪ <span className="ml-1">Common</span></span>
-          <span className="text-green-400 flex items-center">🟢 <span className="ml-1">Uncommon</span></span>
-          <span className="text-blue-400 flex items-center">🔵 <span className="ml-1">Rare</span></span>
-          <span className="text-purple-400 flex items-center">🟣 <span className="ml-1">Legendary</span></span>
+        <div className="flex justify-center space-x-6 bg-slate-900 bg-opacity-50 rounded-lg" style={{ marginBottom: SPACING.xl, padding: SPACING.md }}>
+          <span className={`${TEXT_SIZES.sm} text-slate-400 flex items-center`}>⚪ Common</span>
+          <span className={`${TEXT_SIZES.sm} text-green-400 flex items-center`}>🟢 Uncommon</span>
+          <span className={`${TEXT_SIZES.sm} text-blue-400 flex items-center`}>🔵 Rare</span>
+          <span className={`${TEXT_SIZES.sm} text-purple-400 flex items-center`}>🟣 Legendary</span>
         </div>
 
         {/* Selection Preview */}
         {selectedPerks.length > 0 && (
-          <div className="mb-6 p-4 bg-yellow-900 bg-opacity-50 rounded-lg border border-yellow-500">
-            <div className="text-yellow-300 font-bold mb-2 text-center">
-              ✨ Selected Perks Preview ({selectedPerks.length}/{maxPerks})
+          <div className="bg-amber-900 bg-opacity-40 rounded-lg border border-amber-600" style={{ marginBottom: SPACING.xl, padding: SPACING.lg }}>
+            <div className={`${TEXT_SIZES.base} font-semibold text-amber-300 text-center mb-3`}>
+              Selected Perks Preview ({selectedPerks.length}/{maxPerks})
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {getSelectedPerkObjects.map(perk => (
-                <div key={perk.id} className="bg-yellow-800 bg-opacity-60 p-2 rounded text-xs">
-                  <div className="font-bold text-yellow-200">{perk.icon} {perk.name}</div>
-                  <div className="text-yellow-100 text-xs">{perk.description}</div>
+                <div key={perk.id} className="bg-amber-800 bg-opacity-50 rounded" style={{ padding: SPACING.sm }}>
+                  <div className={`${TEXT_SIZES.sm} font-semibold text-amber-200`}>{perk.icon} {perk.name}</div>
+                  <div className={`${TEXT_SIZES.xs} text-amber-100`}>{perk.description}</div>
                 </div>
               ))}
             </div>
@@ -143,7 +195,7 @@ export const PerkSelector = ({
         )}
 
         {/* Perk Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ marginBottom: SPACING.xl }}>
           {sortedPerks.map(perk => {
             const isSelected = selectedPerks.includes(perk.id);
             const isDisabled = !isSelected && selectedPerks.length >= maxPerks;
@@ -153,39 +205,40 @@ export const PerkSelector = ({
                 key={perk.id}
                 onClick={() => !isDisabled && handlePerkToggle(perk.id)}
                 className={`
-                  relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 min-h-[160px] transform
+                  relative rounded-xl border-2 cursor-pointer transition-all duration-300 min-h-[160px] transform
                   ${isSelected 
-                    ? 'border-yellow-400 bg-gradient-to-b from-yellow-900 to-yellow-800 scale-105 shadow-lg shadow-yellow-500/30' 
+                    ? 'border-amber-400 bg-amber-900 bg-opacity-30 scale-105 shadow-lg' 
                     : isDisabled 
-                    ? 'border-gray-600 bg-gray-800 opacity-50 cursor-not-allowed'
-                    : 'border-gray-400 bg-gradient-to-b from-black to-gray-900 hover:border-green-400 hover:scale-102'
+                    ? 'border-slate-600 bg-slate-700 opacity-50 cursor-not-allowed'
+                    : 'border-slate-500 bg-slate-800 hover:border-slate-400 hover:scale-102'
                   }
                 `}
+                style={{ padding: SPACING.lg }}
               >
                 {/* Tier Badge */}
-                <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold ${PerkUtils.getTierColor(perk.tier)} shadow-lg`}>
+                <div className={`absolute top-2 right-2 rounded-full ${TEXT_SIZES.xs} font-semibold ${PerkUtils.getTierColor(perk.tier)} shadow-md`} style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
                   {PerkUtils.getTierEmoji(perk.tier)}
                 </div>
 
                 {/* Perk Icon */}
-                <div className="text-4xl mb-3 text-center">
+                <div className={`${TEXT_SIZES['3xl']} text-center mb-3`}>
                   {perk.icon}
                 </div>
 
                 {/* Perk Name */}
-                <h3 className="text-sm font-bold text-yellow-300 mb-2 text-center leading-tight">
+                <h3 className={`${TEXT_SIZES.sm} font-semibold text-amber-300 text-center leading-tight mb-2`}>
                   {perk.name}
                 </h3>
 
                 {/* Perk Description */}
-                <p className="text-xs text-green-300 text-center leading-relaxed">
+                <p className={`${TEXT_SIZES.xs} text-slate-300 text-center leading-relaxed`}>
                   {perk.description}
                 </p>
 
                 {/* Selection Indicator */}
                 {isSelected && (
-                  <div className="absolute inset-0 border-2 border-yellow-400 rounded-xl bg-yellow-400 bg-opacity-20 flex items-center justify-center backdrop-blur-sm">
-                    <div className="bg-yellow-400 text-black font-bold px-3 py-2 rounded-full text-sm shadow-lg animate-pulse">
+                  <div className="absolute inset-0 border-2 border-amber-400 rounded-xl bg-amber-400 bg-opacity-20 flex items-center justify-center backdrop-blur-sm">
+                    <div className={`bg-amber-400 text-black font-semibold rounded-full ${TEXT_SIZES.sm} shadow-lg`} style={{ padding: `${SPACING.sm} ${SPACING.md}` }}>
                       ✓ SELECTED
                     </div>
                   </div>
@@ -199,7 +252,8 @@ export const PerkSelector = ({
         <div className="flex justify-center space-x-4">
           <button
             onClick={onSkip}
-            className="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-500 hover:to-gray-400 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
+            className={`${TEXT_SIZES.base} font-semibold bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg`}
+            style={{ padding: `${SPACING.md} ${SPACING.xl}` }}
           >
             Skip This Round
           </button>
@@ -207,7 +261,8 @@ export const PerkSelector = ({
           <button
             onClick={handleConfirm}
             disabled={selectedPerks.length === 0}
-            className="px-8 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 disabled:from-gray-500 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 disabled:scale-100 shadow-lg"
+            className={`${TEXT_SIZES.base} font-semibold bg-amber-600 hover:bg-amber-500 disabled:bg-slate-500 disabled:cursor-not-allowed text-white rounded-lg transition-all duration-200 transform hover:scale-105 disabled:scale-100 shadow-lg`}
+            style={{ padding: `${SPACING.md} ${SPACING.xl}` }}
           >
             {selectedPerks.length > 0 
               ? `Add ${selectedPerks.length} Perk${selectedPerks.length > 1 ? 's' : ''}` 
@@ -217,13 +272,13 @@ export const PerkSelector = ({
         </div>
 
         {/* Info Footer */}
-        <div className="mt-6 text-center text-sm text-gray-300 bg-black bg-opacity-40 p-3 rounded-lg">
-          <p className="mb-1">💡 <strong>Strategy Tips:</strong></p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-            <p>• Perks accumulate - choose complementary effects</p>
-            <p>• Higher tier perks have stronger effects</p>
-            <p>• Consider your current money and play style</p>
-            <p>• Next perk selection in 3 hands</p>
+        <div className={`${TEXT_SIZES.sm} text-center text-slate-400 bg-slate-900 bg-opacity-40 rounded-lg`} style={{ marginTop: SPACING.xl, padding: SPACING.md }}>
+          <p className="font-medium mb-2">Strategy Tips:</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <p className={TEXT_SIZES.xs}>• Perks accumulate - choose complementary effects</p>
+            <p className={TEXT_SIZES.xs}>• Higher tier perks have stronger effects</p>
+            <p className={TEXT_SIZES.xs}>• Consider your current money and play style</p>
+            <p className={TEXT_SIZES.xs}>• Next perk selection in 3 hands</p>
           </div>
         </div>
       </div>
@@ -231,7 +286,7 @@ export const PerkSelector = ({
   );
 };
 
-// Streamlined Perks Info Bar
+// Cleaned Perks Info Bar
 export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -250,8 +305,8 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
   const expiringPerks = validPerkDetails.filter(p => p.handsRemaining <= 1);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-purple-900 via-purple-800 to-purple-900 border-b-2 border-purple-400 shadow-lg">
-      <div className="container mx-auto px-4 py-3">
+    <div className="fixed top-0 left-0 right-0 z-40 bg-slate-800 border-b border-slate-700 shadow-lg">
+      <div className="container mx-auto" style={{ padding: `${SPACING.sm} ${SPACING.lg}` }}>
         
         {/* Main Info Bar */}
         <div className="flex items-center justify-between">
@@ -259,10 +314,10 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
             
             {/* Perk Count */}
             <div className="flex items-center space-x-2">
-              <div className="text-yellow-300 font-bold text-lg flex items-center">
-                🎯 {validPerks.length} Active Perk{validPerks.length > 1 ? 's' : ''}
+              <div className={`${TEXT_SIZES.base} font-semibold text-amber-400 flex items-center`}>
+                {validPerks.length} Active Perk{validPerks.length > 1 ? 's' : ''}
                 {expiringPerks.length > 0 && (
-                  <span className="ml-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs animate-pulse">
+                  <span className={`ml-2 bg-red-600 text-white rounded-full ${TEXT_SIZES.xs} animate-pulse`} style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
                     {expiringPerks.length} Expiring!
                   </span>
                 )}
@@ -278,14 +333,14 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
                     className="relative group"
                     title={`${perk.name}: ${perk.description} (${perk.handsRemaining || 0} hands left)`}
                   >
-                    <span className={`text-sm px-2 py-1 rounded-full border ${
+                    <span className={`${TEXT_SIZES.sm} rounded-full border cursor-help ${
                       (perk.handsRemaining || 0) <= 1 
                         ? 'bg-red-700 border-red-500 animate-pulse' 
-                        : 'bg-purple-700 border-purple-500'
-                    } text-white cursor-help`}>
+                        : 'bg-slate-700 border-slate-500'
+                    } text-white`} style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
                       {perk.icon}
                     </span>
-                    <span className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                    <span className={`absolute -top-1 -right-1 bg-blue-600 text-white rounded-full ${TEXT_SIZES.xs} w-4 h-4 flex items-center justify-center`}>
                       {perk.handsRemaining || 0}
                     </span>
                   </div>
@@ -294,7 +349,8 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
                 validPerks.slice(0, 6).map((perk, index) => (
                   <span 
                     key={`${perk.id}-${index}-fallback`}
-                    className="text-sm bg-purple-700 border border-purple-500 text-white px-2 py-1 rounded-full cursor-help"
+                    className={`${TEXT_SIZES.sm} bg-slate-700 border border-slate-500 text-white rounded-full cursor-help`}
+                    style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}
                     title={perk.description}
                   >
                     {perk.icon}
@@ -302,32 +358,32 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
                 ))
               )}
               {validPerks.length > 6 && (
-                <span className="text-sm text-purple-300 px-2">+{validPerks.length - 6}</span>
+                <span className={`${TEXT_SIZES.sm} text-slate-400`} style={{ padding: `0 ${SPACING.sm}` }}>+{validPerks.length - 6}</span>
               )}
             </div>
 
             {/* Game Information */}
-            <div className="flex space-x-3 text-sm text-white">
+            <div className={`flex space-x-3 ${TEXT_SIZES.sm} text-white`}>
               {dealerInfo.isTenValue !== undefined && (
-                <span className="bg-blue-800 px-2 py-1 rounded border border-blue-600">
-                  👁️ Hole: {dealerInfo.isTenValue ? '10-Value' : 'Not 10'}
+                <span className="bg-blue-800 border border-blue-600 rounded" style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
+                  Hole: {dealerInfo.isTenValue ? '10-Value' : 'Not 10'}
                 </span>
               )}
               {dealerInfo.tenCount !== undefined && (
-                <span className="bg-cyan-800 px-2 py-1 rounded border border-cyan-600">
-                  🧮 Tens: {dealerInfo.tenCount}/{dealerInfo.deckSize || '?'}
+                <span className="bg-cyan-800 border border-cyan-600 rounded" style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
+                  Tens: {dealerInfo.tenCount}/{dealerInfo.deckSize || '?'}
                 </span>
               )}
               {bustProbability && (
-                <span className={`px-2 py-1 rounded border ${
+                <span className={`border rounded ${
                   bustProbability.safe ? 'bg-green-800 border-green-600' : 'bg-red-800 border-red-600'
-                }`}>
-                  📊 Bust: {bustProbability.probability}%
+                }`} style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
+                  Bust: {bustProbability.probability}%
                 </span>
               )}
               {dealerInfo.dealerValue && (
-                <span className="bg-orange-800 px-2 py-1 rounded border border-orange-600">
-                  🎯 Dealer: {dealerInfo.dealerValue}
+                <span className="bg-orange-800 border border-orange-600 rounded" style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
+                  Dealer: {dealerInfo.dealerValue}
                 </span>
               )}
             </div>
@@ -335,22 +391,19 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
 
           {/* Round Info & Controls */}
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-purple-200">
-              <div>Round {roundInfo?.currentPerkRound || '?'}</div>
-              <div className="text-xs">{roundInfo?.handsUntilNextPerkRound || '?'} until next</div>
-            </div>
-            
             <div className="flex space-x-1">
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="text-purple-300 hover:text-white text-sm px-2 py-1 rounded border border-purple-600 hover:border-purple-400 transition-colors"
+                className={`${TEXT_SIZES.sm} text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 rounded transition-colors`}
+                style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}
                 title="Toggle detailed view"
               >
                 {showDetails ? '📋' : '📊'}
               </button>
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-purple-300 hover:text-white text-sm px-2 py-1 rounded border border-purple-600 hover:border-purple-400 transition-colors"
+                className={`${TEXT_SIZES.sm} text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 rounded transition-colors`}
+                style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}
               >
                 {isExpanded ? '▲' : '▼'}
               </button>
@@ -360,7 +413,7 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
 
         {/* Expanded Details */}
         {isExpanded && (
-          <div className="mt-4 pt-4 border-t border-purple-600">
+          <div className="border-t border-slate-600" style={{ marginTop: SPACING.lg, paddingTop: SPACING.lg }}>
             {showDetails ? (
               // Detailed view
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -368,27 +421,28 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
                   validPerkDetails.map((perk, index) => (
                     <div 
                       key={`detail-${perk.id}-${index}-${perk.handsRemaining || 0}`}
-                      className={`p-3 rounded-lg text-sm relative border ${
+                      className={`${TEXT_SIZES.sm} relative border rounded-lg ${
                         (perk.handsRemaining || 0) <= 1 
                           ? 'bg-red-900 bg-opacity-60 border-red-500' 
-                          : 'bg-purple-800 bg-opacity-60 border-purple-500'
+                          : 'bg-slate-700 bg-opacity-60 border-slate-500'
                       }`}
+                      style={{ padding: SPACING.md }}
                     >
-                      <div className="font-bold text-yellow-300 flex items-center justify-between">
+                      <div className="font-semibold text-amber-300 flex items-center justify-between">
                         <span>{perk.icon} {perk.name}</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
+                        <span className={`${TEXT_SIZES.xs} rounded-full ${
                           (perk.handsRemaining || 0) <= 1 ? 'bg-red-600' : 'bg-blue-600'
-                        } text-white`}>
+                        } text-white`} style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}>
                           {perk.handsRemaining || 0}h
                         </span>
                       </div>
-                      <div className="text-purple-200 mt-1">
+                      <div className="text-slate-300 mt-1">
                         {perk.description}
                       </div>
-                      <div className="text-xs text-gray-400 mt-2 flex justify-between">
+                      <div className={`${TEXT_SIZES.xs} text-slate-500 flex justify-between`} style={{ marginTop: SPACING.sm }}>
                         <span>Round {perk.addedInRound || '?'}</span>
                         {(perk.handsRemaining || 0) <= 1 && (
-                          <span className="text-red-400 font-bold animate-pulse">EXPIRING!</span>
+                          <span className="text-red-400 font-semibold animate-pulse">EXPIRING!</span>
                         )}
                       </div>
                     </div>
@@ -397,12 +451,13 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
                   validPerks.map((perk, index) => (
                     <div 
                       key={`basic-${perk.id}-${index}-fallback`}
-                      className="bg-purple-800 bg-opacity-60 p-3 rounded-lg text-sm border border-purple-500"
+                      className={`bg-slate-700 bg-opacity-60 border border-slate-500 rounded-lg ${TEXT_SIZES.sm}`}
+                      style={{ padding: SPACING.md }}
                     >
-                      <div className="font-bold text-yellow-300">
+                      <div className="font-semibold text-amber-300">
                         {perk.icon} {perk.name}
                       </div>
-                      <div className="text-purple-200 mt-1">
+                      <div className="text-slate-300 mt-1">
                         {perk.description}
                       </div>
                     </div>
@@ -412,14 +467,15 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
             ) : (
               // Summary view
               <div className="flex items-center space-x-4">
-                <div className="text-sm font-bold px-3 py-1 rounded-full bg-purple-600 text-white">
+                <div className={`${TEXT_SIZES.sm} font-semibold bg-slate-700 text-white rounded-full`} style={{ padding: `${SPACING.sm} ${SPACING.md}` }}>
                   Active Perks
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {validPerks.map((perk, index) => (
                     <span 
                       key={`${perk.id}-${index}-basic-summary`}
-                      className="text-xs bg-purple-700 text-white px-2 py-1 rounded border border-purple-400"
+                      className={`${TEXT_SIZES.xs} bg-slate-700 text-white border border-slate-500 rounded cursor-help`}
+                      style={{ padding: `${SPACING.xs} ${SPACING.sm}` }}
                       title={perk.description}
                     >
                       {perk.icon} {perk.name}
@@ -435,7 +491,7 @@ export const PerksInfoBar = ({ activePerks, gameState, perkInfo, game, roundInfo
   );
 };
 
-// Streamlined Betting Controls
+// Cleaned Betting Controls
 export const EnhancedBettingControls = ({ 
   onPlaceBet, 
   maxBet = 1000, 
@@ -446,7 +502,6 @@ export const EnhancedBettingControls = ({
   playerStats = {}
 }) => {
   const [betAmount, setBetAmount] = useState(25);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   
   const minBet = perkInfo?.getMinBet() || 5;
   const freeBetInfo = perkInfo?.getFreeBetInfo(currentMoney, playerStats) || { available: false, amount: 0 };
@@ -489,25 +544,19 @@ export const EnhancedBettingControls = ({
   }, [minBet, betAmount]);
 
   return (
-    <div className="w-full bg-gradient-to-b from-gray-900 to-black rounded-xl p-4 border border-gray-700 shadow-lg">
+    <div className="w-full bg-slate-800 rounded-xl border border-slate-700 shadow-lg" style={{ padding: SPACING.lg }}>
       
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-yellow-300 font-bold text-lg">💰 PLACE YOUR BET</h3>
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          {showAdvanced ? '▼ Simple' : '▲ Advanced'}
-        </button>
+      <div className="flex items-center justify-between" style={{ marginBottom: SPACING.lg }}>
+        <h3 className={`${TEXT_SIZES.lg} font-semibold text-amber-400`}>Place Your Bet</h3>
       </div>
       
       {/* High Priority Recommendations */}
       {recommendations.filter(r => r.priority === 'high').length > 0 && (
-        <div className="mb-4 space-y-2">
+        <div className="space-y-2" style={{ marginBottom: SPACING.lg }}>
           {recommendations.filter(r => r.priority === 'high').map((rec, index) => (
-            <div key={index} className="p-2 rounded border text-sm bg-red-900 border-red-500 text-red-200">
-              <div className="font-bold">⚠️ {rec.type.toUpperCase()}</div>
+            <div key={index} className={`${TEXT_SIZES.sm} bg-red-900 border border-red-500 text-red-200 rounded`} style={{ padding: SPACING.sm }}>
+              <div className="font-semibold">⚠️ {rec.type.toUpperCase()}</div>
               <div>{rec.message}</div>
             </div>
           ))}
@@ -516,19 +565,20 @@ export const EnhancedBettingControls = ({
 
       {/* Free Bet Section */}
       {freeBetInfo.available && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-red-900 to-red-800 rounded-lg border border-red-500">
+        <div className="bg-gradient-to-r from-red-900 to-red-800 rounded-lg border border-red-500" style={{ marginBottom: SPACING.lg, padding: SPACING.md }}>
           <div className="text-center">
-            <div className="text-red-300 text-sm font-bold mb-2 flex items-center justify-center">
-              🎯 FREE BET AVAILABLE! 🎯
+            <div className={`${TEXT_SIZES.sm} font-semibold text-red-300 flex items-center justify-center`} style={{ marginBottom: SPACING.sm }}>
+              Free Bet Available!
             </div>
             <button
               onClick={handleFreeBet}
               disabled={disabled}
-              className="bg-red-600 hover:bg-red-500 disabled:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors transform hover:scale-105 disabled:scale-100"
+              className={`${TEXT_SIZES.base} font-semibold bg-red-600 hover:bg-red-500 disabled:bg-slate-600 text-white rounded-lg transition-colors transform hover:scale-105 disabled:scale-100`}
+              style={{ padding: `${SPACING.sm} ${SPACING.lg}` }}
             >
               Use Free ${freeBetInfo.amount} Bet
             </button>
-            <div className="text-xs text-red-200 mt-1">
+            <div className={`${TEXT_SIZES.xs} text-red-200`} style={{ marginTop: SPACING.xs }}>
               No money risked • Full winnings kept
             </div>
           </div>
@@ -537,41 +587,43 @@ export const EnhancedBettingControls = ({
 
       {/* Bailout Info */}
       {bailoutInfo.available && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg border border-blue-500">
-          <div className="text-center text-blue-300 text-sm">
-            <div className="font-bold">💸 Emergency Bailout Ready</div>
+        <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg border border-blue-500" style={{ marginBottom: SPACING.lg, padding: SPACING.md }}>
+          <div className={`${TEXT_SIZES.sm} text-center text-blue-300`}>
+            <div className="font-semibold">Emergency Bailout Ready</div>
             <div>+${bailoutInfo.amount} {bailoutInfo.description}</div>
           </div>
         </div>
       )}
      
       {/* Smart Bet Buttons */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-3 gap-2" style={{ marginBottom: SPACING.lg }}>
         {smartBets.map(amount => (
           <button
             key={amount}
             onClick={() => setBetAmount(amount)}
             disabled={amount > maxBet || disabled}
-            className={`py-2 px-2 rounded-lg text-white text-sm font-bold transition-all duration-200 ${
+            className={`${TEXT_SIZES.sm} font-semibold text-white rounded-lg transition-all duration-200 ${
               betAmount === amount 
-                ? 'bg-gradient-to-r from-yellow-600 to-yellow-500 shadow-lg scale-105' 
-                : 'bg-gradient-to-r from-green-800 to-green-700 hover:from-green-700 hover:to-green-600 hover:scale-102'
+                ? 'bg-gradient-to-r from-amber-600 to-amber-500 shadow-lg scale-105' 
+                : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 hover:scale-102'
             } ${
               amount > maxBet || disabled ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''
             }`}
+            style={{ padding: `${SPACING.sm} ${SPACING.sm}` }}
           >
             ${amount}
-            {amount === Math.floor(currentMoney * 0.05) && <div className="text-xs opacity-75">5%</div>}
-            {amount === Math.floor(currentMoney * 0.1) && <div className="text-xs opacity-75">10%</div>}
-            {amount === Math.floor(currentMoney * 0.2) && <div className="text-xs opacity-75">20%</div>}
+            {amount === Math.floor(currentMoney * 0.05) && <div className={`${TEXT_SIZES.xs} opacity-75`}>5%</div>}
+            {amount === Math.floor(currentMoney * 0.1) && <div className={`${TEXT_SIZES.xs} opacity-75`}>10%</div>}
+            {amount === Math.floor(currentMoney * 0.2) && <div className={`${TEXT_SIZES.xs} opacity-75`}>20%</div>}
           </button>
         ))}
       </div>
      
       {/* Custom Bet Amount Controls */}
-      <div className="flex items-center mb-4">
+      <div className="flex items-center" style={{ marginBottom: SPACING.lg }}>
         <button
-          className="bg-red-800 hover:bg-red-700 text-white font-bold px-4 py-2 rounded-l-lg disabled:opacity-50 transition-colors"
+          className={`${TEXT_SIZES.base} font-semibold bg-red-700 hover:bg-red-600 text-white rounded-l-lg disabled:opacity-50 transition-colors`}
+          style={{ padding: `${SPACING.sm} ${SPACING.lg}` }}
           onClick={() => setBetAmount(Math.max(minBet, betAmount - 10))}
           disabled={disabled || betAmount <= minBet}
         >
@@ -579,19 +631,21 @@ export const EnhancedBettingControls = ({
         </button>
         
         <button
-          className="bg-red-700 hover:bg-red-600 text-white font-bold px-3 py-2 disabled:opacity-50 transition-colors"
+          className={`${TEXT_SIZES.base} font-semibold bg-red-600 hover:bg-red-500 text-white disabled:opacity-50 transition-colors`}
+          style={{ padding: `${SPACING.sm} ${SPACING.md}` }}
           onClick={() => setBetAmount(Math.max(minBet, betAmount - 5))}
           disabled={disabled || betAmount <= minBet}
         >
           -5
         </button>
        
-        <div className="bg-black text-white text-center border-y-2 border-gray-700 py-2 px-4 flex-1 font-bold text-lg">
+        <div className={`bg-slate-900 text-white text-center border-y-2 border-slate-600 flex-1 font-bold ${TEXT_SIZES.lg}`} style={{ padding: `${SPACING.sm} ${SPACING.lg}` }}>
           ${betAmount}
         </div>
         
         <button
-          className="bg-green-700 hover:bg-green-600 text-white font-bold px-3 py-2 disabled:opacity-50 transition-colors"
+          className={`${TEXT_SIZES.base} font-semibold bg-green-600 hover:bg-green-500 text-white disabled:opacity-50 transition-colors`}
+          style={{ padding: `${SPACING.sm} ${SPACING.md}` }}
           onClick={() => setBetAmount(Math.min(maxBet, betAmount + 5))}
           disabled={disabled || betAmount >= maxBet}
         >
@@ -599,72 +653,33 @@ export const EnhancedBettingControls = ({
         </button>
        
         <button
-          className="bg-green-800 hover:bg-green-700 text-white font-bold px-4 py-2 rounded-r-lg disabled:opacity-50 transition-colors"
+          className={`${TEXT_SIZES.base} font-semibold bg-green-700 hover:bg-green-600 text-white rounded-r-lg disabled:opacity-50 transition-colors`}
+          style={{ padding: `${SPACING.sm} ${SPACING.lg}` }}
           onClick={() => setBetAmount(Math.min(maxBet, betAmount + 10))}
           disabled={disabled || betAmount >= maxBet}
         >
           +10
         </button>
       </div>
-
-      {/* Advanced Controls */}
-      {showAdvanced && (
-        <div className="mb-4 p-3 bg-gray-800 bg-opacity-50 rounded-lg border border-gray-600">
-          <div className="text-sm text-gray-300 mb-2 font-bold">Quick Set:</div>
-          <div className="grid grid-cols-4 gap-2">
-            <button
-              onClick={() => setBetAmount(minBet)}
-              className="text-xs py-1 px-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
-            >
-              Min
-            </button>
-            <button
-              onClick={() => setBetAmount(Math.floor(maxBet * 0.25))}
-              className="text-xs py-1 px-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
-            >
-              25%
-            </button>
-            <button
-              onClick={() => setBetAmount(Math.floor(maxBet * 0.5))}
-              className="text-xs py-1 px-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
-            >
-              50%
-            </button>
-            <button
-              onClick={() => setBetAmount(maxBet)}
-              className="text-xs py-1 px-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
-            >
-              Max
-            </button>
-          </div>
-        </div>
-      )}
      
       {/* Place Bet Button */}
       <button
         onClick={handlePlaceBet}
         disabled={betAmount < minBet || betAmount > maxBet || disabled}
-        className="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-white font-bold py-3 rounded-lg disabled:from-gray-600 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:scale-100 shadow-lg text-lg"
+        className={`w-full ${TEXT_SIZES.lg} font-bold bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white rounded-lg disabled:from-slate-600 disabled:to-slate-500 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:scale-100 shadow-lg`}
+        style={{ padding: `${SPACING.md} 0` }}
       >
         {disabled ? 'BETTING DISABLED' : `DEAL CARDS - ${betAmount}`}
       </button>
      
       {/* Betting Info */}
-      <div className="text-center mt-3 text-xs space-y-1">
-        <div className="text-green-300">
+      <div className={`text-center ${TEXT_SIZES.xs} space-y-1`} style={{ marginTop: SPACING.md }}>
+        <div className="text-green-400">
           Balance: ${maxBet} • Min: ${minBet} • Max: ${maxBet}
         </div>
         {minBet > 5 && (
-          <div className="text-yellow-300">
-            💎 High Roller active - Minimum bet increased
-          </div>
-        )}
-        {showAdvanced && recommendations.filter(r => r.priority !== 'high').length > 0 && (
-          <div className="text-left mt-2 p-2 bg-gray-800 bg-opacity-50 rounded text-xs">
-            <div className="font-bold text-gray-300 mb-1">Additional Tips:</div>
-            {recommendations.filter(r => r.priority !== 'high').map((rec, index) => (
-              <div key={index} className="text-gray-400">• {rec.message}</div>
-            ))}
+          <div className="text-amber-400">
+            High Roller active - Minimum bet increased
           </div>
         )}
       </div>
