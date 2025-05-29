@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react';
 
-// MacroProcessor - Pure JSON-driven macro system
+// Enhanced MacroProcessor - Full dynamic variable support
 export class MacroProcessor {
   constructor(macroDefinitions = {}, conditionalTemplates = {}) {
     this.macros = macroDefinitions;
@@ -79,100 +79,201 @@ export class MacroProcessor {
     return result;
   }
 
-  // Get variable value from game state
+  // ENHANCED: Get variable value from game state with full dynamic support
   getVariableValue(variableName, gameState) {
-    // Check main game state first
-    if (gameState.hasOwnProperty(variableName)) {
+    // Check main game state first (built-in properties)
+    if (gameState.hasOwnProperty(variableName) && variableName !== 'customVariables') {
       return gameState[variableName];
     }
-    // Check custom variables
+    
+    // Check custom variables (dynamic variables)
     if (gameState.customVariables && gameState.customVariables.hasOwnProperty(variableName)) {
       return gameState.customVariables[variableName];
     }
+    
+    // Return null for non-existent variables (will be handled by processOperation)
     return null;
   }
 
-  // Process a single operation string
-  processOperation(operation, currentValue = 0) {
+  // ENHANCED: Process operations with automatic variable initialization
+  processOperation(operation, currentValue = null) {
     if (typeof operation !== 'string') return operation;
 
     const operationStr = String(operation);
 
+    // ENHANCED: Smart initialization for new variables (currentValue === null)
+    if (currentValue === null) {
+      if (operationStr.startsWith('+') || operationStr.startsWith('-') || 
+          operationStr.startsWith('*') || operationStr.startsWith('/')) {
+        currentValue = 0; // Initialize numeric operations to 0
+      } else if (operationStr.startsWith('push:') || operationStr.startsWith('remove:')) {
+        currentValue = []; // Initialize array operations to empty array
+      } else if (operationStr === 'toggle') {
+        currentValue = false; // Initialize boolean operations to false
+      } else if (operationStr.startsWith('=')) {
+        // Direct assignment - no initialization needed
+        currentValue = 0;
+      } else {
+        // For other operations, try to infer type from the operation value
+        const numValue = parseFloat(operationStr);
+        currentValue = isNaN(numValue) ? '' : 0; // String or number
+      }
+      
+      if (import.meta.env.DEV) {
+        console.log(`Initialized new variable with default value: ${currentValue} for operation: ${operationStr}`);
+      }
+    }
+
     // Addition: "+5"
     if (operationStr.startsWith('+')) {
       const addValue = parseFloat(operationStr.substring(1));
-      return (typeof currentValue === 'number' ? currentValue : 0) + addValue;
+      const result = (typeof currentValue === 'number' ? currentValue : 0) + addValue;
+      if (import.meta.env.DEV) {
+        console.log(`Addition: ${currentValue} + ${addValue} = ${result}`);
+      }
+      return result;
     }
 
     // Subtraction: "-3"
     if (operationStr.startsWith('-')) {
       const subValue = parseFloat(operationStr.substring(1));
-      return (typeof currentValue === 'number' ? currentValue : 0) - subValue;
+      const result = (typeof currentValue === 'number' ? currentValue : 0) - subValue;
+      if (import.meta.env.DEV) {
+        console.log(`Subtraction: ${currentValue} - ${subValue} = ${result}`);
+      }
+      return result;
     }
 
     // Absolute assignment: "=10"
     if (operationStr.startsWith('=')) {
-      return parseFloat(operationStr.substring(1));
+      const assignValue = operationStr.substring(1);
+      const numValue = parseFloat(assignValue);
+      const result = isNaN(numValue) ? assignValue : numValue;
+      if (import.meta.env.DEV) {
+        console.log(`Assignment: = ${result}`);
+      }
+      return result;
     }
 
     // Multiplication: "*2"
     if (operationStr.startsWith('*')) {
       const multValue = parseFloat(operationStr.substring(1));
-      return (typeof currentValue === 'number' ? currentValue : 0) * multValue;
+      const result = (typeof currentValue === 'number' ? currentValue : 0) * multValue;
+      if (import.meta.env.DEV) {
+        console.log(`Multiplication: ${currentValue} * ${multValue} = ${result}`);
+      }
+      return result;
     }
 
     // Division: "/2"
     if (operationStr.startsWith('/')) {
       const divValue = parseFloat(operationStr.substring(1));
-      return Math.floor((typeof currentValue === 'number' ? currentValue : 0) / divValue);
+      const result = Math.floor((typeof currentValue === 'number' ? currentValue : 0) / divValue);
+      if (import.meta.env.DEV) {
+        console.log(`Division: ${currentValue} / ${divValue} = ${result}`);
+      }
+      return result;
     }
 
     // Array push: "push:item"
     if (operationStr.startsWith('push:')) {
       const item = operationStr.substring(5);
       const currentArray = Array.isArray(currentValue) ? currentValue : [];
-      return [...currentArray, item];
+      const result = [...currentArray, item];
+      if (import.meta.env.DEV) {
+        console.log(`Array push: [${currentArray.join(', ')}] + ${item} = [${result.join(', ')}]`);
+      }
+      return result;
     }
 
     // Array remove: "remove:item"
     if (operationStr.startsWith('remove:')) {
       const item = operationStr.substring(7);
       const currentArray = Array.isArray(currentValue) ? currentValue : [];
-      return currentArray.filter(i => i !== item);
+      const result = currentArray.filter(i => i !== item);
+      if (import.meta.env.DEV) {
+        console.log(`Array remove: [${currentArray.join(', ')}] - ${item} = [${result.join(', ')}]`);
+      }
+      return result;
     }
 
-    // Random number: "random:1-10"
+    // Random number: "random:1-10" or "random:10"
     if (operationStr.startsWith('random:')) {
       const range = operationStr.substring(7);
+      let result;
       if (range.includes('-')) {
         const [min, max] = range.split('-').map(Number);
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+        result = Math.floor(Math.random() * (max - min + 1)) + min;
+      } else {
+        result = Math.floor(Math.random() * parseFloat(range));
       }
-      return Math.floor(Math.random() * parseFloat(range));
+      if (import.meta.env.DEV) {
+        console.log(`Random: ${range} = ${result}`);
+      }
+      return result;
     }
 
     // Boolean toggle: "toggle"
     if (operationStr === 'toggle') {
-      return !currentValue;
+      const result = !currentValue;
+      if (import.meta.env.DEV) {
+        console.log(`Toggle: ${currentValue} -> ${result}`);
+      }
+      return result;
+    }
+
+    // ENHANCED: Support for increment/decrement shortcuts
+    if (operationStr === '++') {
+      const result = (typeof currentValue === 'number' ? currentValue : 0) + 1;
+      if (import.meta.env.DEV) {
+        console.log(`Increment: ${currentValue} -> ${result}`);
+      }
+      return result;
+    }
+
+    if (operationStr === '--') {
+      const result = (typeof currentValue === 'number' ? currentValue : 0) - 1;
+      if (import.meta.env.DEV) {
+        console.log(`Decrement: ${currentValue} -> ${result}`);
+      }
+      return result;
     }
 
     // Direct value assignment (string or number)
     const numValue = parseFloat(operationStr);
-    return isNaN(numValue) ? operationStr : numValue;
+    const result = isNaN(numValue) ? operationStr : numValue;
+    if (import.meta.env.DEV) {
+      console.log(`Direct assignment: ${result}`);
+    }
+    return result;
   }
 
-  // Evaluate a condition string
+  // ENHANCED: Evaluate conditions with dynamic variable support
   evaluateCondition(condition, gameState) {
     if (typeof condition !== 'string') return false;
 
     // Handle template conditions (e.g., "{$winStreak} >= 3")
-    const templatePattern = /{\$(\w+)}\s*([><=!]+)\s*(\d+)/;
+    const templatePattern = /{\$(\w+)}\s*([><=!]+)\s*(.+)/;
     const match = condition.match(templatePattern);
 
     if (match) {
       const [, variable, operator, value] = match;
       const currentValue = this.getVariableValue(variable, gameState);
-      const compareValue = parseFloat(value);
+      
+      // Handle string vs numeric comparison
+      let compareValue;
+      if (value.startsWith('"') && value.endsWith('"')) {
+        compareValue = value.slice(1, -1); // Remove quotes for string comparison
+      } else {
+        compareValue = parseFloat(value);
+        if (isNaN(compareValue)) {
+          compareValue = value; // Keep as string if not a number
+        }
+      }
+
+      if (import.meta.env.DEV) {
+        console.log(`Evaluating condition: ${variable}(${currentValue}) ${operator} ${compareValue}`);
+      }
 
       switch (operator) {
         case '>=': return currentValue >= compareValue;
@@ -180,21 +281,36 @@ export class MacroProcessor {
         case '>': return currentValue > compareValue;
         case '<': return currentValue < compareValue;
         case '==': return currentValue == compareValue;
+        case '===': return currentValue === compareValue;
         case '!=': return currentValue != compareValue;
+        case '!==': return currentValue !== compareValue;
         default: return false;
       }
     }
 
-    // Handle simple template references
-    if (condition.startsWith('{$')) {
+    // Handle simple template references (e.g., "{$hasKey}")
+    if (condition.startsWith('{$') && condition.endsWith('}')) {
       const variable = condition.slice(2, -1);
-      return !!this.getVariableValue(variable, gameState);
+      const value = this.getVariableValue(variable, gameState);
+      return !!value; // Convert to boolean
+    }
+
+    // Handle array contains operations (e.g., "{$achievements} contains firstDate")
+    const containsPattern = /{\$(\w+)}\s+contains\s+(.+)/;
+    const containsMatch = condition.match(containsPattern);
+    if (containsMatch) {
+      const [, variable, item] = containsMatch;
+      const currentValue = this.getVariableValue(variable, gameState);
+      if (Array.isArray(currentValue)) {
+        return currentValue.includes(item.replace(/"/g, ''));
+      }
+      return false;
     }
 
     return false;
   }
 
-  // Process a single macro
+  // Process a single macro with enhanced parameter handling
   processMacro(macroCall, gameState) {
     let macroName, params = {};
 
@@ -227,7 +343,9 @@ export class MacroProcessor {
 
     const macroDef = this.macros[macroName];
     if (!macroDef) {
-      console.warn(`Macro not found: ${macroName}. Available macros:`, Object.keys(this.macros));
+      if (import.meta.env.DEV) {
+        console.warn(`Macro not found: ${macroName}. Available macros:`, Object.keys(this.macros));
+      }
       return {};
     }
 
@@ -309,12 +427,13 @@ export class MacroProcessor {
           const [templateName, character] = condition.split(':');
           const template = this.conditionalTemplates[templateName];
           if (template && this.evaluateTemplateCondition(template, character, gameState)) {
-            additionalText += template.text.replace('{character}', character || '');
+            const text = template.text || '';
+            additionalText += text.replace('{character}', character || '');
           }
         } else {
           const template = this.conditionalTemplates[condition];
           if (template && this.evaluateTemplateCondition(template, null, gameState)) {
-            additionalText += template.text;
+            additionalText += template.text || '';
           }
         }
       }
@@ -355,9 +474,16 @@ export class MacroProcessor {
   getMacroDefinition(macroName) {
     return this.macros[macroName];
   }
+
+  // ENHANCED: Get all current variables (for debugging)
+  getAllVariables(gameState) {
+    const builtin = Object.keys(gameState).filter(key => key !== 'customVariables');
+    const custom = Object.keys(gameState.customVariables || {});
+    return { builtin, custom, all: [...builtin, ...custom] };
+  }
 }
 
-// React Hook for using MacroProcessor
+// ENHANCED: React Hook for using MacroProcessor with full dynamic support
 export const useMacroProcessor = (gameData = {}) => {
   const processorRef = useRef(null);
   const gameDataRef = useRef(null);
@@ -384,7 +510,7 @@ export const useMacroProcessor = (gameData = {}) => {
     }
   }, [gameData.macros, gameData.conditionalTemplates]);
 
-  // Process macros and apply to game state
+  // ENHANCED: Process macros with dynamic variable creation
   const processMacros = useCallback((macroList, gameState, setGameState) => {
     if (!processorRef.current) {
       console.warn('MacroProcessor not initialized');
@@ -409,7 +535,7 @@ export const useMacroProcessor = (gameData = {}) => {
     }
 
     if (updates && Object.keys(updates).length > 0) {
-      // Use a timeout to ensure the state update happens asynchronously
+      // Use setTimeout to ensure async state update
       setTimeout(() => {
         setGameState(prevState => {
           const newState = { ...prevState };
@@ -419,17 +545,19 @@ export const useMacroProcessor = (gameData = {}) => {
             // Get current value using the processor's method
             const currentValue = processorRef.current.getVariableValue(key, prevState);
             
-            // Process the operation
+            // Process the operation (handles null values for new variables)
             const newValue = processorRef.current.processOperation(operation, currentValue);
 
             if (import.meta.env.DEV) {
               console.log(`Updating ${key}: ${currentValue} -> ${newValue} (operation: ${operation})`);
             }
 
-            // Determine where to store the value
-            if (newState.hasOwnProperty(key)) {
+            // ENHANCED: Automatic placement logic
+            if (key in newState && key !== 'customVariables') {
+              // It's a built-in property
               newState[key] = newValue;
             } else {
+              // It's a custom/dynamic variable
               newCustomVariables[key] = newValue;
             }
           });
@@ -441,6 +569,7 @@ export const useMacroProcessor = (gameData = {}) => {
 
           if (import.meta.env.DEV) {
             console.log('New game state after macro processing:', finalState);
+            console.log('Total custom variables:', Object.keys(newCustomVariables).length);
           }
 
           return finalState;
@@ -461,7 +590,7 @@ export const useMacroProcessor = (gameData = {}) => {
     return processorRef.current.processConditionalTemplates(conditions, gameState);
   }, []);
 
-  // Get variable value
+  // Get variable value (works with any dynamic variable)
   const getVariableValue = useCallback((variableName, gameState) => {
     if (!processorRef.current) return null;
     return processorRef.current.getVariableValue(variableName, gameState);
@@ -473,11 +602,18 @@ export const useMacroProcessor = (gameData = {}) => {
     return processorRef.current.processMacro(macroCall, gameState);
   }, []);
 
+  // ENHANCED: Get all variables (for debugging)
+  const getAllVariables = useCallback((gameState) => {
+    if (!processorRef.current) return { builtin: [], custom: [], all: [] };
+    return processorRef.current.getAllVariables(gameState);
+  }, []);
+
   return {
     processMacros,
     processConditions,
     getVariableValue,
     processSingleMacro,
+    getAllVariables,
     getAvailableMacros: () => processorRef.current?.getAvailableMacros() || [],
     getMacroDefinition: (name) => processorRef.current?.getMacroDefinition(name) || null
   };

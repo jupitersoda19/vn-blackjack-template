@@ -73,37 +73,18 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     getMacroDefinition
   } = useMacroProcessor(gameData);
 
-  // Enhanced game state with custom variables
+  // UPDATED: Simplified game state with fully dynamic custom variables
   const [gameState, setGameState] = useState({
-    // Existing functionality
+    // Core game properties (built-in, always present)
     playerMoney: 1000,
     playerInitialMoney: 1000,
     profit: 0,
     completedEvents: [],
     totalHandsPlayed: 0,
 
-    // New custom variables (now managed by MacroProcessor)
-    customVariables: {
-      victoriaRelationship: 0,
-      rachelRelationship: 0,
-      sophiaRelationship: 0,
-      jasmineRelationship: 0,
-
-      playerPersonality: "neutral",
-      charmPoints: 0,
-      aggressionPoints: 0,
-
-      casinoReputation: 0,
-      visitCount: 0,
-      dateCount: 0,
-      gamesPlayed: 0,
-      blackjackGamesPlayed: 0,
-
-      totalWinnings: 0,
-      totalLosses: 0,
-
-      achievements: []
-    }
+    // CHANGED: Dynamic custom variables - starts empty, grows as needed
+    customVariables: {}
+    // No predefined keys! All custom variables are created dynamically
   });
 
   const [currentEvent, setCurrentEvent] = useState(null);
@@ -122,6 +103,34 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
   const [autoAdvance, setAutoAdvance] = useState(false);
   const [skipReadDialog, setSkipReadDialog] = useState(false);
   const [textSpeed, setTextSpeed] = useState(30);
+
+  // UPDATED: Helper functions for dynamic variable access
+  const getDynamicVariable = useCallback((variableName, defaultValue = null) => {
+    return getVariableValue(variableName, gameState) ?? defaultValue;
+  }, [getVariableValue, gameState]);
+
+  const setDynamicVariable = useCallback((variableName, value) => {
+    setGameState(prevState => {
+      const newState = { ...prevState };
+      
+      // If it's a built-in property, set it directly
+      if (variableName in newState && variableName !== 'customVariables') {
+        newState[variableName] = value;
+      } else {
+        // Otherwise, put it in customVariables
+        newState.customVariables = {
+          ...prevState.customVariables,
+          [variableName]: value
+        };
+      }
+      
+      if (import.meta.env.DEV) {
+        console.log(`Set dynamic variable: ${variableName} = ${value}`);
+      }
+      
+      return newState;
+    });
+  }, []);
 
   // Update game data when playerData changes
   useEffect(() => {
@@ -150,7 +159,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     }
   }, [gameData.events]);
 
-  // Process conditional text using new system
+  // UPDATED: Enhanced processConditionalText to work with dynamic variables
   const processConditionalText = useCallback((conditionalText) => {
     if (!conditionalText || typeof conditionalText !== 'object') return '';
 
@@ -289,6 +298,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     }
   }, [gameData.conditionalTemplates, getVariableValue, gameState, evaluateCondition]);
 
+  // UPDATED: Enhanced processDialogText to work with any dynamic variable
   const processDialogText = useCallback((dialogList, gameResult = null) => {
     return dialogList.map(dialog => {
       if (!dialog.text || typeof dialog.text !== 'string') return dialog;
@@ -309,9 +319,44 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         .replace('{profit}', profitValue)
         .replace('{result}', resultText);
 
-      // Replace custom variables using new system
-      Object.entries(gameState.customVariables || {}).forEach(([key, value]) => {
-        processedText = processedText.replace(`{${key}}`, value);
+      // UPDATED: Replace ALL custom variables dynamically with smart formatting
+      // This regex finds all {variableName} patterns
+      processedText = processedText.replace(/{(\w+)}/g, (match, variableName) => {
+        // Skip if it's already been replaced (money, profit, result)
+        if (['money', 'profit', 'result'].includes(variableName)) {
+          return match;
+        }
+
+        // Get the value using our dynamic variable system
+        const value = getVariableValue(variableName, gameState);
+        
+        if (value === null) {
+          return match; // Keep placeholder if variable doesn't exist
+        }
+
+        // ENHANCED: Smart formatting based on value type
+        if (Array.isArray(value)) {
+          // Format arrays nicely
+          if (value.length === 0) {
+            return "none";
+          } else if (value.length <= 3) {
+            return value.join(", ");
+          } else {
+            return `${value.slice(0, 3).join(", ")} and ${value.length - 3} more`;
+          }
+        } else if (typeof value === 'boolean') {
+          // Format booleans
+          return value ? "yes" : "no";
+        } else if (typeof value === 'number') {
+          // Format numbers (keep as-is for now, could add formatting later)
+          return value.toString();
+        } else if (typeof value === 'string') {
+          // Format strings
+          return value;
+        } else {
+          // Fallback for other types
+          return String(value);
+        }
       });
 
       // Process conditions using new system
@@ -331,7 +376,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         textAnimation: dialog.textAnimation || 'typewriter'
       };
     });
-  }, [gameState, textSpeed, processMacros, processConditions, processConditionalText]);
+  }, [gameState, textSpeed, processMacros, processConditions, processConditionalText, getVariableValue]);
 
   const startBlackjackGame = useCallback(() => {
     setShowBlackjack(true);
@@ -506,13 +551,14 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     }
   }, [currentEvent, processDialogText, startEvent, updateSceneFromDialog, processMacros, gameState]);
 
+  // UPDATED: Enhanced save/load to handle dynamic variables
   const saveGame = useCallback(() => {
     if (!currentEvent) return null;
 
     return {
       currentEvent: currentEvent.key,
       dialogIndex,
-      gameState,
+      gameState, // This now includes all dynamic customVariables
       blackjackParams,
       gameCompleted,
       background,
@@ -524,6 +570,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
   const loadGame = useCallback((savedData) => {
     if (!savedData || !savedData.currentEvent) return false;
 
+    // UPDATED: Load the complete game state with all dynamic variables
     setGameState(savedData.gameState);
 
     const event = gameData.events.find(e => e.key === savedData.currentEvent);
@@ -629,14 +676,16 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     };
   }, [currentDialog, dialogIndex, textSpeed]);
 
-  // Debug info for macro system
+  // UPDATED: Enhanced debug info for dynamic variables
   useEffect(() => {
     if (import.meta.env.DEV) {
       console.log('Available macros:', getAvailableMacros());
       console.log('Game data macros:', gameData.macros);
       console.log('Conditional templates:', gameData.conditionalTemplates);
+      console.log('Current dynamic variables:', gameState.customVariables);
+      console.log('Total custom variables count:', Object.keys(gameState.customVariables).length);
     }
-  }, [gameData, getAvailableMacros]);
+  }, [gameData, getAvailableMacros, gameState.customVariables]);
 
   if (!gameData.events?.length) {
     return (
@@ -692,19 +741,32 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
             )}
           </div>
 
-          {/* Macro Debug Info (Dev only) */}
+          {/* UPDATED: Enhanced Debug Info */}
           {import.meta.env.DEV && (
-            <div
-              className="px-2 py-1 rounded text-xs"
-              style={{
-                backgroundColor: `${theme.primaryColor}99`,
-                color: theme.textColor,
-                border: `1px solid ${theme.accentColor}`
-              }}
-              title={`Macros: ${getAvailableMacros().length}`}
-            >
-              🔧 {getAvailableMacros().length}
-            </div>
+            <>
+              <div
+                className="px-2 py-1 rounded text-xs"
+                style={{
+                  backgroundColor: `${theme.primaryColor}99`,
+                  color: theme.textColor,
+                  border: `1px solid ${theme.accentColor}`
+                }}
+                title={`Macros: ${getAvailableMacros().length}`}
+              >
+                🔧 {getAvailableMacros().length}
+              </div>
+              <div
+                className="px-2 py-1 rounded text-xs"
+                style={{
+                  backgroundColor: `${theme.primaryColor}99`,
+                  color: theme.textColor,
+                  border: `1px solid ${theme.accentColor}`
+                }}
+                title={`Custom Variables: ${Object.keys(gameState.customVariables).length}\n${Object.keys(gameState.customVariables).join(', ')}`}
+              >
+                📊 {Object.keys(gameState.customVariables).length}
+              </div>
+            </>
           )}
 
           <button

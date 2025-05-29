@@ -10,9 +10,34 @@
       "secondaryColor": "#2D0000",
       "textColor": "#F5F5DC"
     },
-    "editorNotes": "Testing macros, conditions, and game flow"
+    "editorNotes": "Testing macros, conditions, and game flow with proper variable initialization"
   },
   "macros": {
+    "initializeAllVariables": {
+      "description": "Initialize all variables used in conditional templates",
+      "parameters": [],
+      "updates": {
+        "visitCount": "=0",
+        "casinoReputation": "=0",
+        "victoriaRelationship": "=0",
+        "sophiaRelationship": "=0",
+        "rachelRelationship": "=0",
+        "playerPersonality": "=neutral",
+        "charmPoints": "=0",
+        "aggressionPoints": "=0",
+        "gamesPlayed": "=0",
+        "dateCount": "=0",
+        "totalWinnings": "=0",
+        "totalLosses": "=0",
+        "profit": "=0",
+        "achievements": "=[]",
+        "achievementCount": "=0",
+        "achievement_test_complete_unlocked": "=false",
+        "achievement_ultra_test_unlocked": "=false",
+        "achievement_sophia_romance_unlocked": "=false",
+        "achievement_all_tests_complete_unlocked": "=false"
+      }
+    },
     "increaseVisitCount": {
       "description": "Increase the player's visit count to the casino",
       "parameters": [],
@@ -52,7 +77,7 @@
       "description": "Set charming personality and increase charm points",
       "parameters": [],
       "updates": {
-        "playerPersonality": "charming",
+        "playerPersonality": "=charming",
         "charmPoints": "+2"
       }
     },
@@ -60,7 +85,7 @@
       "description": "Set aggressive personality",
       "parameters": [],
       "updates": {
-        "playerPersonality": "aggressive",
+        "playerPersonality": "=aggressive",
         "aggressionPoints": "+2"
       }
     },
@@ -68,15 +93,14 @@
       "description": "Set neutral personality",
       "parameters": [],
       "updates": {
-        "playerPersonality": "neutral"
+        "playerPersonality": "=neutral"
       }
     },
     "addGamePlayed": {
       "description": "Track games played",
       "parameters": ["gameType"],
       "updates": {
-        "gamesPlayed": "+1",
-        "{gameType}GamesPlayed": "+1"
+        "gamesPlayed": "+1"
       }
     },
     "successfulDate": {
@@ -100,7 +124,8 @@
       "description": "Unlock an achievement",
       "parameters": ["achievement"],
       "updates": {
-        "achievements": "push:{achievement}"
+        "achievements": "push:{achievement}",
+        "achievement_{achievement}_unlocked": "=true"
       }
     },
     "addWinnings": {
@@ -119,6 +144,38 @@
         "playerMoney": "-{amount}",
         "totalLosses": "+{amount}",
         "profit": "-{amount}"
+      }
+    },
+    "resetAllCustomVariables": {
+      "description": "Reset all custom variables for testing",
+      "parameters": [],
+      "updates": {
+        "visitCount": "=0",
+        "casinoReputation": "=0",
+        "victoriaRelationship": "=0",
+        "sophiaRelationship": "=0",
+        "rachelRelationship": "=0",
+        "playerPersonality": "=neutral",
+        "charmPoints": "=0",
+        "aggressionPoints": "=0",
+        "gamesPlayed": "=0",
+        "dateCount": "=0",
+        "totalWinnings": "=0",
+        "totalLosses": "=0",
+        "profit": "=0",
+        "achievements": "=[]",
+        "achievementCount": "=0",
+        "achievement_test_complete_unlocked": "=false",
+        "achievement_ultra_test_unlocked": "=false",
+        "achievement_sophia_romance_unlocked": "=false",
+        "achievement_all_tests_complete_unlocked": "=false"
+      }
+    },
+    "getAchievementCount": {
+      "description": "Get count of achievements (for display purposes)",
+      "parameters": [],
+      "updates": {
+        "achievementCount": "={$achievements.length|0}"
       }
     }
   },
@@ -218,6 +275,18 @@
       "operator": "<",
       "value": 0,
       "text": " You're down for the evening."
+    },
+    "hasAchievements": {
+      "variable": "achievements",
+      "operator": ">",
+      "value": 0,
+      "text": " You've unlocked some achievements!"
+    },
+    "hasUnlockedTestComplete": {
+      "variable": "achievement_test_complete_unlocked",
+      "operator": "==",
+      "value": true,
+      "text": " You've completed the test achievement!"
     }
   },
   "events": [
@@ -230,7 +299,14 @@
           "background": "/assets/backgrounds/casino-entrance.jpg",
           "characters": {},
           "speaker": "Narrator",
-          "text": "Welcome to the macro and condition test! You start with {money}.",
+          "text": "Welcome to the macro and condition test! Initializing variables...",
+          "macros": ["initializeAllVariables"]
+        },
+        {
+          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "characters": {},
+          "speaker": "Narrator",
+          "text": "You start with ${money}. Visit count: {visitCount}",
           "macros": ["increaseVisitCount", "beNeutral"],
           "conditions": ["isNewbie"],
           "conditionalText": {
@@ -247,7 +323,7 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Hello! I'm Victoria, your test hostess.",
+          "text": "Hello! I'm Victoria, your test hostess. Current relationship: {victoriaRelationship}",
           "macros": ["increaseRelationship:victoria:5"],
           "choices": [
             {
@@ -283,8 +359,8 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Let me see how we're getting along. Relationship: {victoriaRelationship}",
-          "conditions": ["likesYou:victoria"],
+          "text": "Let me see how we're getting along. Relationship: {victoriaRelationship}, Personality: {playerPersonality}, Charm: {charmPoints}",
+          "conditions": ["likesYou:victoria", "lovesYou:victoria", "dislikes:victoria", "isCharming", "isAggressive"],
           "conditionalText": {
             "likesYou:victoria": " I'm starting to like you!",
             "lovesYou:victoria": " I think I'm falling for you!",
@@ -339,9 +415,9 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Welcome to the VIP area! Reputation: {casinoReputation}",
+          "text": "Welcome to the VIP area! Reputation: {casinoReputation}, Date count: {dateCount}",
           "macros": ["successfulDate:victoria"],
-          "conditions": ["isVIP"],
+          "conditions": ["isVIP", "lovesYou:victoria", "isCharming + isVIP"],
           "conditionalText": {
             "isVIP": " You're our most valued guest!",
             "lovesYou:victoria": " I've been waiting for this moment.",
@@ -352,14 +428,7 @@
           "background": "/assets/backgrounds/vip-room.jpg",
           "characters": {},
           "speaker": "Narrator",
-          "text": "You spend intimate time with Victoria...",
-          "iframe": {
-            "url": "https://www.hub.org/embed/6797755417f79",
-            "width": "90%",
-            "height": "300px",
-            "position": "center",
-            "allowFullscreen": true
-          }
+          "text": "You spend intimate time with Victoria..."
         },
         {
           "background": "/assets/backgrounds/vip-room.jpg",
@@ -401,8 +470,9 @@
             }
           },
           "speaker": "Rachel",
-          "text": "Let's test money conditions! Current money: {money}, Profit: ${profit}",
-          "conditions": ["isRich", "hasModestFunds", "isBroke"],
+          "text": "Let's test money conditions! Current money: ${money}, Profit: ${profit}, Winnings: {totalWinnings}, Losses: {totalLosses}",
+          "macros": ["increaseRelationship:rachel:2"],
+          "conditions": ["isRich", "hasModestFunds", "isBroke", "isWinning", "isLosing"],
           "conditionalText": {
             "isRich": " You're quite wealthy!",
             "hasModestFunds": " You have decent funds.",
@@ -421,7 +491,7 @@
             }
           },
           "speaker": "Rachel",
-          "text": "Want to adjust your money for testing?",
+          "text": "Want to adjust your money for testing? Rachel relationship: {rachelRelationship}",
           "choices": [
             {
               "text": "Add $2000 (test rich condition)",
@@ -460,8 +530,9 @@
             }
           },
           "speaker": "Sophia",
-          "text": "Time to test the game functionality! Current money: {money}",
+          "text": "Time to test the game functionality! Current money: ${money}, Games played: {gamesPlayed}",
           "macros": ["increaseRelationship:sophia:3"],
+          "conditions": ["canAffordHighStakes", "canAffordUltraStakes", "isBroke"],
           "conditionalText": {
             "canAffordHighStakes": " You can afford high stakes!",
             "canAffordUltraStakes": " You're ready for ultra stakes!",
@@ -478,7 +549,7 @@
             }
           },
           "speaker": "Sophia",
-          "text": "Choose your stakes:",
+          "text": "Choose your stakes: (Sophia relationship: {sophiaRelationship})",
           "choices": [
             {
               "text": "Low Stakes - $200 (always available)",
@@ -572,20 +643,8 @@
             }
           },
           "speaker": "Sophia",
-          "text": "Game complete! {result}. New balance: {money}, Profit: ${profit}",
+          "text": "Game complete! {result}. New balance: ${money}, Profit: ${profit}",
           "macros": ["increaseRelationship:sophia:5"],
-          "conditionalElements": {
-            "winCondition": {
-              "variable": "playerWon",
-              "value": true,
-              "additionalText": " Excellent play!"
-            },
-            "loseCondition": {
-              "variable": "playerWon",
-              "value": false,
-              "additionalText": " Better luck next time."
-            }
-          },
           "choices": [
             {
               "text": "Play again",
@@ -596,7 +655,7 @@
               "nextEvent": "achievement_test"
             },
             {
-              "text": "Test relationship unlock",
+              "text": "Test relationship unlock (need 15+ relationship)",
               "macros": ["increaseRelationship:sophia:20"],
               "requiresCondition": "likesYou:sophia",
               "nextEvent": "relationship_unlock"
@@ -622,7 +681,7 @@
           "speaker": "Sophia",
           "text": "You've won my heart! Relationship: {sophiaRelationship}",
           "macros": ["successfulDate:sophia", "unlockAchievement:sophia_romance"],
-          "conditions": ["lovesYou:sophia"],
+          "conditions": ["lovesYou:sophia", "isCharming"],
           "conditionalText": {
             "lovesYou:sophia": " I think I'm in love with you!",
             "isCharming": " Your charm is irresistible."
@@ -632,14 +691,7 @@
           "background": "/assets/backgrounds/exclusive-suite.png",
           "characters": {},
           "speaker": "Narrator",
-          "text": "You enjoy intimate time with Sophia...",
-          "iframe": {
-            "url": "https://www.hub.org/embed/67d2ae942fc1a",
-            "width": "90%",
-            "height": "300px",
-            "position": "center",
-            "allowFullscreen": true
-          }
+          "text": "You enjoy intimate time with Sophia..."
         },
         {
           "background": "/assets/backgrounds/exclusive-suite.png",
@@ -671,18 +723,21 @@
           "background": "/assets/backgrounds/casino-entrance.jpg",
           "characters": {},
           "speaker": "Narrator",
-          "text": "Achievement test! Games played: {blackjackGamesPlayed}, Total reputation: {casinoReputation}",
+          "text": "Achievement test! Blackjack games: {gamesPlayed}, Total reputation: {casinoReputation}, Visit count: {visitCount}",
+          "conditions": ["isVIP", "isRegular", "isRich", "hasAchievements", "hasUnlockedTestComplete"],
           "conditionalText": {
             "isVIP": " You've achieved VIP status!",
             "isRegular": " You're a regular here now!",
-            "isRich": " You've become wealthy!"
+            "isRich": " You've become wealthy!",
+            "hasAchievements": " You have achievements unlocked!",
+            "hasUnlockedTestComplete": " Test complete achievement is unlocked!"
           }
         },
         {
           "background": "/assets/backgrounds/casino-entrance.jpg",
           "characters": {},
           "speaker": "Narrator",
-          "text": "Test achievement unlocks:",
+          "text": "Test achievement unlocks. Current achievements: {achievements}",
           "choices": [
             {
               "text": "Unlock test achievement",
@@ -724,6 +779,7 @@
           "speaker": "Victoria",
           "text": "Congratulations! All tests completed successfully!",
           "macros": ["unlockAchievement:all_tests_complete"],
+          "conditions": ["lovesYou:victoria", "isVIP", "isRich", "isCharming"],
           "conditionalText": {
             "lovesYou:victoria": " And I love you too!",
             "isVIP": " You're our most valued tester!",
@@ -741,12 +797,12 @@
             }
           },
           "speaker": "Victoria",
-          "text": "Final stats - Money: {money}, Victoria: {victoriaRelationship}, Sophia: {sophiaRelationship}, Reputation: {casinoReputation}",
+          "text": "Final stats - Money: ${money}, Victoria: {victoriaRelationship}, Sophia: {sophiaRelationship}, Rachel: {rachelRelationship}, Reputation: {casinoReputation}",
           "choices": [
             {
-              "text": "Restart test",
-              "nextEvent": "intro",
-              "resetVariables": true
+              "text": "Restart test (reset all variables)",
+              "macros": ["resetAllCustomVariables"],
+              "nextEvent": "intro"
             },
             {
               "text": "Exit",
@@ -755,38 +811,6 @@
           ]
         }
       ]
-    }
-  ],
-  "gameVariables": {
-    "playerMoney": 1000,
-    "playerProgress": 0,
-    "visitedLocations": [],
-    "unlockedAchievements": []
-  },
-  "achievements": [
-    {
-      "id": "test_complete",
-      "title": "Test Complete",
-      "description": "Completed a test scenario",
-      "icon": "/assets/icons/star.png"
-    },
-    {
-      "id": "ultra_test",
-      "title": "Ultra Stakes Tester",
-      "description": "Tested ultra high stakes game",
-      "icon": "/assets/icons/chip.png"
-    },
-    {
-      "id": "sophia_romance",
-      "title": "Sophia's Heart",
-      "description": "Won over Sophia in testing",
-      "icon": "/assets/icons/heart.png"
-    },
-    {
-      "id": "all_tests_complete",
-      "title": "Master Tester",
-      "description": "Completed all functionality tests",
-      "icon": "/assets/icons/gold-heart.png"
     }
   ]
 }
