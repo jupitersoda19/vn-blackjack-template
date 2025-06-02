@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
+import { MacroProcessor } from '../utils/MacroProcessor'; // Import the actual MacroProcessor
 
 // Predefined operation types for the UI
 const OPERATION_TYPES = [
@@ -15,11 +16,311 @@ const OPERATION_TYPES = [
 
 const VARIABLE_SUGGESTIONS = [
   'playerMoney', 'profit', 'totalWinnings', 'totalLosses', 'casinoReputation', 
-  'visitCount', 'dateCount', 'gamesPlayed', 'blackjackGamesPlayed',
-  'charmPoints', 'aggressionPoints', 'playerPersonality',
-  'victoriaRelationship', 'rachelRelationship', 'sophiaRelationship', 'jasmineRelationship',
-  'achievements', 'winStreak', 'lossStreak'
+  'visitCount', 'dateCount', 'gamesPlayed', 'blackjackGamesPlayed', 'danceGamesPlayed',
+  'charmPoints', 'aggressionPoints', 'playerPersonality', 'danceSkill',
+  'achievements', 'winStreak', 'lossStreak', 'perfectDanceCount'
 ];
+
+const MacroTestingPlayground = ({ macros, conditionalTemplates, selectedMacro }) => {
+  const [testState, setTestState] = useState({
+    // Built-in variables
+    playerMoney: 1000,
+    profit: 0,
+    visitCount: 1,
+    gamesPlayed: 0,
+    blackjackGamesPlayed: 0,
+    danceGamesPlayed: 0,
+    dartGamesPlayed: 0,
+    casinoReputation: 25,
+    customVariables: {
+      danceSkill: 15,
+      playerPersonality: "neutral",
+      achievements: ["first_visit"],
+      charmPoints: 3
+    }
+  });
+
+  const [testMacroCall, setTestMacroCall] = useState('');
+  const [testResults, setTestResults] = useState(null);
+  const [testError, setTestError] = useState(null);
+
+  // Create MacroProcessor instance
+  const macroProcessor = useMemo(() => {
+    return new MacroProcessor(macros, conditionalTemplates);
+  }, [macros, conditionalTemplates]);
+
+  const runMacroTest = () => {
+    try {
+      setTestError(null);
+      
+      if (!testMacroCall.trim()) {
+        setTestError('Please enter a macro to test');
+        return;
+      }
+
+      // Parse the macro call
+      const macroArray = [testMacroCall.trim()];
+      
+      // Create a copy of test state for processing
+      const testStateCopy = { ...testState };
+      
+      console.log('Testing macro:', testMacroCall);
+      console.log('Initial state:', testStateCopy);
+      
+      // Process the macro
+      const results = macroProcessor.processMacros(macroArray, testStateCopy);
+      
+      console.log('Macro results:', results);
+      
+      // Apply results to create new state
+      let newState = { ...testStateCopy };
+      
+      Object.entries(results).forEach(([variable, value]) => {
+        if (variable === 'flowControl') return; // Skip flow control
+        
+        // Check if this is a built-in variable
+        if (variable in newState && variable !== 'customVariables') {
+          newState[variable] = value;
+        } else {
+          // This is a custom variable
+          if (!newState.customVariables) {
+            newState.customVariables = {};
+          }
+          newState.customVariables[variable] = value;
+        }
+      });
+      
+      // Calculate changes
+      const changes = [];
+      
+      // Check built-in variables
+      Object.keys(newState).forEach(key => {
+        if (key !== 'customVariables' && newState[key] !== testState[key]) {
+          changes.push({
+            variable: key,
+            from: testState[key],
+            to: newState[key],
+            type: 'built-in'
+          });
+        }
+      });
+      
+      // Check custom variables
+      Object.keys(newState.customVariables || {}).forEach(key => {
+        const oldValue = testState.customVariables?.[key];
+        const newValue = newState.customVariables[key];
+        if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+          changes.push({
+            variable: key,
+            from: oldValue,
+            to: newValue,
+            type: 'custom'
+          });
+        }
+      });
+      
+      setTestResults({
+        originalState: testState,
+        newState: newState,
+        changes: changes,
+        flowControl: results.flowControl || null
+      });
+      
+    } catch (error) {
+      console.error('Macro test error:', error);
+      setTestError(`Error: ${error.message}`);
+      setTestResults(null);
+    }
+  };
+
+  const applyTestResults = () => {
+    if (testResults) {
+      setTestState(testResults.newState);
+      setTestResults(null);
+    }
+  };
+
+  const resetTestState = () => {
+    setTestState({
+      playerMoney: 1000,
+      profit: 0,
+      visitCount: 1,
+      gamesPlayed: 0,
+      blackjackGamesPlayed: 0,
+      danceGamesPlayed: 0,
+      casinoReputation: 25,
+      customVariables: {
+        danceSkill: 15,
+        playerPersonality: "neutral",
+        achievements: ["first_visit"],
+        charmPoints: 3
+      }
+    });
+    setTestResults(null);
+    setTestError(null);
+  };
+
+  const formatValue = (value) => {
+    if (Array.isArray(value)) {
+      return `[${value.join(', ')}]`;
+    }
+    if (typeof value === 'object' && value !== null) {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
+  return (
+    <div className="bg-gray-900 rounded-lg p-4 space-y-4">
+      <h3 className="text-yellow-400 font-bold text-lg flex items-center">
+        🧪 Macro Testing Playground
+        <span className="ml-2 text-xs text-gray-400">(Test your macros safely)</span>
+      </h3>
+
+      {/* Current Test State */}
+      <div className="bg-gray-800 rounded p-3">
+        <h4 className="text-green-400 font-semibold mb-2">Current Test State</h4>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <div className="text-yellow-300 font-semibold mb-1">Built-in Variables:</div>
+            {Object.entries(testState).filter(([key]) => key !== 'customVariables').map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="text-gray-300">{key}:</span>
+                <span className="text-white font-mono">{formatValue(value)}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div className="text-yellow-300 font-semibold mb-1">Custom Variables:</div>
+            {Object.entries(testState.customVariables || {}).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="text-gray-300">{key}:</span>
+                <span className="text-white font-mono">{formatValue(value)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <button
+          onClick={resetTestState}
+          className="mt-2 bg-gray-600 hover:bg-gray-500 text-white px-3 py-1 rounded text-sm"
+        >
+          Reset to Defaults
+        </button>
+      </div>
+
+      {/* Macro Testing */}
+      <div className="bg-gray-800 rounded p-3">
+        <h4 className="text-blue-400 font-semibold mb-2">Test Macro</h4>
+        <div className="flex space-x-2 mb-2">
+          <input
+            value={testMacroCall}
+            onChange={(e) => setTestMacroCall(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && runMacroTest()}
+            className="flex-1 bg-gray-700 text-white border border-gray-600 rounded py-2 px-3 text-sm font-mono"
+            placeholder="e.g., increaseRelationship:character:10 or beCharming"
+          />
+          <button
+            onClick={runMacroTest}
+            disabled={!testMacroCall.trim()}
+            className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white px-4 py-2 rounded text-sm"
+          >
+            Test
+          </button>
+        </div>
+        
+        {selectedMacro && (
+          <div className="text-xs text-gray-400 mb-2">
+            <strong>Quick fill:</strong> 
+            <button
+              onClick={() => setTestMacroCall(selectedMacro)}
+              className="ml-2 text-blue-300 hover:text-blue-200 underline"
+            >
+              {selectedMacro}
+            </button>
+            {macros[selectedMacro]?.parameters?.length > 0 && (
+              <span className="ml-2">
+                (needs {macros[selectedMacro].parameters.length} parameter{macros[selectedMacro].parameters.length !== 1 ? 's' : ''})
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Available Macros Quick Reference */}
+        <div className="text-xs text-gray-400 mb-2">
+          <strong>Available macros:</strong>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {Object.keys(macros).map(macroId => (
+              <button
+                key={macroId}
+                onClick={() => setTestMacroCall(macroId)}
+                className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-1 rounded text-xs"
+                title={macros[macroId].description}
+              >
+                {macroId}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Test Results */}
+      {testError && (
+        <div className="bg-red-900 border border-red-600 rounded p-3">
+          <h4 className="text-red-400 font-semibold mb-2">❌ Error</h4>
+          <div className="text-red-200 text-sm font-mono">{testError}</div>
+        </div>
+      )}
+
+      {testResults && (
+        <div className="bg-green-900 border border-green-600 rounded p-3">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-green-400 font-semibold">✅ Test Results</h4>
+            <button
+              onClick={applyTestResults}
+              className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm"
+            >
+              Apply Changes
+            </button>
+          </div>
+          
+          {testResults.changes.length === 0 ? (
+            <div className="text-green-200 text-sm">No changes made to game state.</div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-green-200 text-sm font-semibold">
+                Changes ({testResults.changes.length}):
+              </div>
+              {testResults.changes.map((change, index) => (
+                <div key={index} className="bg-green-800 rounded p-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-green-300 font-semibold">
+                      {change.variable} 
+                      <span className="ml-1 text-xs bg-green-700 px-1 rounded">
+                        {change.type}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="text-green-100 font-mono text-xs">
+                    <span className="text-red-300">{formatValue(change.from)}</span>
+                    <span className="mx-2">→</span>
+                    <span className="text-green-300">{formatValue(change.to)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {testResults.flowControl && (
+            <div className="mt-2 bg-purple-800 rounded p-2">
+              <div className="text-purple-300 text-sm font-semibold">Flow Control Triggered:</div>
+              <div className="text-purple-100 font-mono text-sm">{testResults.flowControl}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const MacroDefinitionEditor = ({ macroId, macro, onMacroChange, onDelete, isNew = false }) => {
   const [localMacro, setLocalMacro] = useState(macro || {
@@ -288,44 +589,6 @@ const MacroDefinitionEditor = ({ macroId, macro, onMacroChange, onDelete, isNew 
         </div>
       </div>
 
-      {/* Conditional Logic (Advanced) */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-yellow-400 font-bold">
-            Conditional Logic
-            <span className="ml-2 text-xs text-gray-400">(Advanced)</span>
-          </label>
-          <button
-            onClick={() => setShowConditions(!showConditions)}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-xs"
-          >
-            {showConditions ? 'Hide' : 'Show'} Conditions
-          </button>
-        </div>
-        
-        {showConditions && (
-          <div className="bg-gray-800 rounded p-3 border border-blue-600">
-            <div className="text-xs text-gray-400 mb-2">
-              Add if/then/else logic to your macro (coming soon in advanced editor)
-            </div>
-            <textarea
-              value={JSON.stringify(localMacro.conditions || {}, null, 2)}
-              onChange={(e) => {
-                try {
-                  const conditions = JSON.parse(e.target.value);
-                  updateMacro({ ...localMacro, conditions });
-                } catch (error) {
-                  // Invalid JSON, don't update
-                }
-              }}
-              className="w-full bg-gray-700 text-white border border-gray-600 rounded py-2 px-2 text-xs font-mono"
-              rows="4"
-              placeholder='{"if": "{$variable} >= 5", "then": {"otherVar": "+10"}}'
-            />
-          </div>
-        )}
-      </div>
-
       {/* Test Section */}
       <div className="bg-gray-900 rounded p-4 border border-green-600">
         <h4 className="text-yellow-400 font-bold mb-2">Test & Preview</h4>
@@ -398,9 +661,15 @@ const ConditionalTemplateEditor = ({ templateId, template, onTemplateChange, onD
           <input
             value={localTemplate.variable}
             onChange={(e) => updateTemplate({...localTemplate, variable: e.target.value})}
+            list="template-variable-suggestions"
             className="w-full bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm"
             placeholder="{character}Relationship"
           />
+          <datalist id="template-variable-suggestions">
+            {VARIABLE_SUGGESTIONS.map(variable => (
+              <option key={variable} value={variable} />
+            ))}
+          </datalist>
         </div>
         
         <div>
@@ -420,9 +689,8 @@ const ConditionalTemplateEditor = ({ templateId, template, onTemplateChange, onD
       <div>
         <label className="block text-yellow-400 text-sm mb-1">Value</label>
         <input
-          type="number"
           value={localTemplate.value}
-          onChange={(e) => updateTemplate({...localTemplate, value: parseFloat(e.target.value)})}
+          onChange={(e) => updateTemplate({...localTemplate, value: e.target.value})}
           className="w-full bg-gray-700 text-white border border-gray-600 rounded py-1 px-2 text-sm"
           placeholder="15"
         />
@@ -543,6 +811,12 @@ const MacroLibraryEditor = ({
           onClick={() => setActiveTab('templates')}
         >
           Conditional Templates ({Object.keys(conditionalTemplates).length})
+        </button>
+        <button
+          className={`py-2 px-4 font-semibold ${activeTab === 'playground' ? 'bg-yellow-700 text-yellow-100' : 'text-yellow-400 hover:text-yellow-300'}`}
+          onClick={() => setActiveTab('playground')}
+        >
+          🧪 Testing Playground
         </button>
       </div>
 
@@ -683,6 +957,16 @@ const MacroLibraryEditor = ({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {activeTab === 'playground' && (
+        <div className="h-full overflow-y-auto">
+          <MacroTestingPlayground 
+            macros={macros}
+            conditionalTemplates={conditionalTemplates}
+            selectedMacro={selectedMacro}
+          />
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 // components/PerkSelector.js - Perk selection interface
 import React, { useState, useEffect } from 'react';
-import { PerkUtils } from '../data/PerkDefinitions';
+import { PerkUtils } from '../utils/PerkDefinitions';
 
 export const PerkSelector = ({ 
   onPerksSelected, 

@@ -1,0 +1,458 @@
+{
+  "metadata": {
+    "title": "Macro Adventure",
+    "version": "1.1.0",
+    "description": "A macro showcase adventure",
+    "author": "Casino Story Writer",
+    "backgroundImage": "/assets/backgrounds/casino-entrance.jpg",
+    "titleScreenTheme": {
+      "primaryColor": "#8B0000",
+      "secondaryColor": "#2D0000",
+      "textColor": "#F5F5DC"
+    }
+  },
+  "events": [
+    {
+      "key": "intro",
+      "preDialog": [
+        {
+          "text": "Welcome! Money: {playerMoney}, Reputation: {casinoReputation}",
+          "speaker": "System",
+          "macros": [
+            "initializePlayer"
+          ],
+          "background": "/backgrounds/casino.jpg"
+        }
+      ],
+      "nextEvent": "demo_macros"
+    },
+    {
+      "key": "demo_macros",
+      "preDialog": [
+        {
+          "text": "Testing all macro types...",
+          "speaker": "System",
+          "macros": [
+            "addMoney:500",
+            "increaseRelationship:victoria:5",
+            "addAchievement:first_demo",
+            "trackDance"
+          ]
+        },
+        {
+          "text": "Money is now {playerMoney}. Victoria relationship: {victoriaRelationship}",
+          "speaker": "System",
+          "choices": [
+            {
+              "text": "Test conditional jump",
+              "macros": [
+                "jumpIf:{$playerMoney}>1000:rich_path:poor_path"
+              ]
+            },
+            {
+              "text": "Test random outcome",
+              "macros": [
+                "randomEvent"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "rich_path",
+      "preDialog": [
+        {
+          "text": "You're wealthy! Unlocking VIP features.",
+          "speaker": "System",
+          "macros": [
+            "unlockVIP"
+          ],
+          "conditions": [
+            "wealthyPlayer"
+          ]
+        }
+      ],
+      "nextEvent": "intro"
+    },
+    {
+      "key": "poor_path",
+      "preDialog": [
+        {
+          "text": "Need more money. Here's a starter bonus.",
+          "speaker": "System",
+          "macros": [
+            "starterBonus"
+          ]
+        }
+      ],
+      "nextEvent": "intro"
+    }
+  ],
+  "macros": {
+    "initializePlayer": {
+      "description": "Set up new player defaults",
+      "parameters": [],
+      "updates": {
+        "casinoReputation": "=50",
+        "victoriaRelationship": "=10",
+        "achievements": "=[]",
+        "playerPersonality": "=neutral"
+      }
+    },
+    "addMoney": {
+      "description": "Add money to player",
+      "parameters": [
+        "amount"
+      ],
+      "updates": {
+        "playerMoney": "+{amount}",
+        "totalEarnings": "+{amount}"
+      }
+    },
+    "spendMoney": {
+      "description": "Subtract money from player",
+      "parameters": [
+        "amount"
+      ],
+      "updates": {
+        "playerMoney": "-{amount}"
+      },
+      "conditions": {
+        "if": "{$playerMoney} >= {amount}",
+        "then": {
+          "lastPurchase": "={amount}"
+        },
+        "else": {
+          "errorMessage": "=insufficient_funds"
+        }
+      }
+    },
+    "increaseRelationship": {
+      "description": "Boost relationship with character",
+      "parameters": [
+        "character",
+        "amount"
+      ],
+      "updates": {
+        "{character}Relationship": "+{amount}",
+        "totalRelationshipGains": "+{amount}"
+      }
+    },
+    "decreaseRelationship": {
+      "description": "Reduce relationship with character",
+      "parameters": [
+        "character",
+        "amount"
+      ],
+      "updates": {
+        "{character}Relationship": "-{amount}"
+      }
+    },
+    "setRelationship": {
+      "description": "Set exact relationship value",
+      "parameters": [
+        "character",
+        "value"
+      ],
+      "updates": {
+        "{character}Relationship": "={value}"
+      }
+    },
+    "multiplyMoney": {
+      "description": "Multiply current money",
+      "parameters": [
+        "multiplier"
+      ],
+      "updates": {
+        "playerMoney": "*{multiplier}"
+      }
+    },
+    "divideMoney": {
+      "description": "Divide current money",
+      "parameters": [
+        "divisor"
+      ],
+      "updates": {
+        "playerMoney": "/{divisor}"
+      }
+    },
+    "incrementCounter": {
+      "description": "Add 1 to counter",
+      "parameters": [
+        "counter"
+      ],
+      "updates": {
+        "{counter}": "++"
+      }
+    },
+    "decrementCounter": {
+      "description": "Subtract 1 from counter",
+      "parameters": [
+        "counter"
+      ],
+      "updates": {
+        "{counter}": "--"
+      }
+    },
+    "toggleFlag": {
+      "description": "Switch boolean value",
+      "parameters": [
+        "flag"
+      ],
+      "updates": {
+        "{flag}": "toggle"
+      }
+    },
+    "addAchievement": {
+      "description": "Add item to achievements array",
+      "parameters": [
+        "achievement"
+      ],
+      "updates": {
+        "achievements": "push:{achievement}"
+      }
+    },
+    "removeAchievement": {
+      "description": "Remove item from achievements",
+      "parameters": [
+        "achievement"
+      ],
+      "updates": {
+        "achievements": "remove:{achievement}"
+      }
+    },
+    "randomBonus": {
+      "description": "Give random money bonus",
+      "parameters": [],
+      "updates": {
+        "playerMoney": "+random:100-500",
+        "bonusRoll": "=random:1-20"
+      }
+    },
+    "randomPenalty": {
+      "description": "Apply random money loss",
+      "parameters": [],
+      "updates": {
+        "playerMoney": "-random:50-200"
+      }
+    },
+    "clearArray": {
+      "description": "Empty an array",
+      "parameters": [
+        "arrayName"
+      ],
+      "updates": {
+        "{arrayName}": "=[]"
+      }
+    },
+    "resetStats": {
+      "description": "Reset multiple values to defaults",
+      "parameters": [],
+      "updates": {
+        "winStreak": "=0",
+        "lossStreak": "=0",
+        "currentMood": "=neutral",
+        "temporaryBonus": "=false"
+      }
+    },
+    "beCharming": {
+      "description": "Increase charm and relationships",
+      "parameters": [],
+      "updates": {
+        "charmPoints": "++",
+        "victoriaRelationship": "+random:1-3",
+        "sophiaRelationship": "+random:1-2"
+      }
+    },
+    "beAggressive": {
+      "description": "Increase aggression, potentially hurt relationships",
+      "parameters": [],
+      "updates": {
+        "aggressionPoints": "++",
+        "victoriaRelationship": "-random:1-2"
+      },
+      "conditions": {
+        "if": "{$charmPoints} > 5",
+        "then": {
+          "specialCharmBonus": "+1"
+        },
+        "else": {
+          "relationshipPenalty": "+1"
+        }
+      }
+    },
+    "trackDance": {
+      "description": "Record dance game completion",
+      "parameters": [],
+      "updates": {
+        "danceGamesPlayed": "++",
+        "totalGamesPlayed": "++",
+        "lastActivity": "=dance"
+      }
+    },
+    "trackDart": {
+      "description": "Record dart game completion",
+      "parameters": [],
+      "updates": {
+        "dartGamesPlayed": "++",
+        "totalGamesPlayed": "++",
+        "lastActivity": "=dart"
+      }
+    },
+    "trackBlackjack": {
+      "description": "Record blackjack game completion",
+      "parameters": [],
+      "updates": {
+        "blackjackGamesPlayed": "++",
+        "totalGamesPlayed": "++",
+        "lastActivity": "=blackjack"
+      }
+    },
+    "unlockVIP": {
+      "description": "Grant VIP status and perks",
+      "parameters": [],
+      "updates": {
+        "vipStatus": "=true",
+        "vipPerks": "=[]",
+        "vipPerks": "push:free_drinks",
+        "vipPerks": "push:priority_seating",
+        "casinoReputation": "+20"
+      }
+    },
+    "starterBonus": {
+      "description": "Give new player boost",
+      "parameters": [],
+      "updates": {
+        "playerMoney": "+250",
+        "starterBonusUsed": "=true"
+      }
+    },
+    "randomEvent": {
+      "description": "Trigger random outcome",
+      "parameters": [],
+      "updates": {
+        "eventRoll": "=random:1-6"
+      },
+      "conditions": {
+        "if": "{$eventRoll} >= 4",
+        "then": {
+          "playerMoney": "+random:100-300",
+          "luckyStreak": "++"
+        },
+        "else": {
+          "playerMoney": "-random:50-150",
+          "unluckyStreak": "++"
+        }
+      }
+    },
+    "winGame": {
+      "description": "Handle game victory",
+      "parameters": [
+        "gameType",
+        "winnings"
+      ],
+      "updates": {
+        "playerMoney": "+{winnings}",
+        "winStreak": "++",
+        "lossStreak": "=0",
+        "{gameType}Wins": "++",
+        "lastGameResult": "=win"
+      }
+    },
+    "loseGame": {
+      "description": "Handle game defeat",
+      "parameters": [
+        "gameType",
+        "losses"
+      ],
+      "updates": {
+        "playerMoney": "-{losses}",
+        "lossStreak": "++",
+        "winStreak": "=0",
+        "{gameType}Losses": "++",
+        "lastGameResult": "=loss"
+      }
+    },
+    "complexUpdate": {
+      "description": "Multiple operations on same variable",
+      "parameters": [
+        "baseAmount"
+      ],
+      "updates": {
+        "playerMoney": "+{baseAmount}",
+        "playerMoney": "*1.5",
+        "playerMoney": "/2",
+        "complexCalc": "={baseAmount/10}"
+      }
+    }
+  },
+  "conditionalTemplates": {
+    "wealthyPlayer": {
+      "variable": "playerMoney",
+      "operator": ">=",
+      "value": 1000,
+      "text": " You feel confident with your wealth."
+    },
+    "poorPlayer": {
+      "variable": "playerMoney",
+      "operator": "<",
+      "value": 500,
+      "text": " You need to be careful with spending."
+    },
+    "likesYou": {
+      "variable": "{character}Relationship",
+      "operator": ">=",
+      "value": 15,
+      "text": " {character} smiles warmly at you."
+    },
+    "dislikesYou": {
+      "variable": "{character}Relationship",
+      "operator": "<=",
+      "value": 5,
+      "text": " {character} seems distant."
+    },
+    "vipMember": {
+      "variable": "vipStatus",
+      "operator": "==",
+      "value": "true",
+      "text": " The VIP lounge awaits you."
+    },
+    "hasAchievements": {
+      "variable": "achievements",
+      "operator": ">",
+      "value": 0,
+      "text": " Your accomplishments speak for themselves."
+    },
+    "winningStreak": {
+      "variable": "winStreak",
+      "operator": ">=",
+      "value": 3,
+      "text": " You're on fire tonight!"
+    },
+    "losingStreak": {
+      "variable": "lossStreak",
+      "operator": ">=",
+      "value": 3,
+      "text": " Perhaps it's time for a break."
+    },
+    "experiencedPlayer": {
+      "variable": "totalGamesPlayed",
+      "operator": ">=",
+      "value": 10,
+      "text": " Your experience shows."
+    },
+    "charmingPersonality": {
+      "variable": "charmPoints",
+      "operator": ">=",
+      "value": 5,
+      "text": " Your charm is evident to everyone."
+    },
+    "aggressivePersonality": {
+      "variable": "aggressionPoints",
+      "operator": ">=",
+      "value": 5,
+      "text": " Others sense your competitive edge."
+    }
+  }
+}

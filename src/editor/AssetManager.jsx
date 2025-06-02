@@ -1,15 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 /**
  * Asset Manager Component for Visual Novel Level Editor
  * Displays all assets used in the game JSON
  */
+
+const AssetPreviewImageItem = ({ assetPath, getAssetUrl }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const fullUrl = getAssetUrl(assetPath);
+
+  const handleLoad = () => {
+    setIsLoading(false);
+    setHasError(false);
+  };
+
+  const handleError = () => {
+    setIsLoading(false);
+    setHasError(true);
+  };
+
+  // Reset state if assetPath changes (important if keys aren't perfectly stable, though they should be)
+  useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+  }, [fullUrl]); // Depend on fullUrl as it's derived from assetPath and baseUrl
+
+  return (
+    <div className="bg-gray-900 rounded-lg overflow-hidden flex flex-col">
+      <div className="bg-gray-800 aspect-square flex items-center justify-center overflow-hidden relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-800 z-10">
+            <svg className="animate-spin h-8 w-8 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        )}
+        <img
+          src={fullUrl}
+          alt={assetPath.split('/').pop()}
+          className={`max-w-full max-h-full object-contain ${isLoading || hasError ? 'opacity-0' : 'opacity-100'}`} // Use opacity for smoother transition
+          onLoad={handleLoad}
+          onError={handleError}
+          loading="lazy" // Add native lazy loading
+        />
+        {hasError && !isLoading && ( // Show error only after attempting to load
+          <div className="absolute inset-0 w-full h-full bg-gray-700 flex flex-col items-center justify-center text-gray-400 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-xs text-center text-red-400">Load Error</span>
+          </div>
+        )}
+      </div>
+      <div className="p-2">
+        <p className="text-xs text-gray-400 truncate" title={assetPath}>{assetPath}</p>
+      </div>
+    </div>
+  );
+};
 const AssetManager = ({ gameData }) => {
   const [selectedTab, setSelectedTab] = useState('summary');
   const [searchTerm, setSearchTerm] = useState('');
   const [assetData, setAssetData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [checkResults, setCheckResults] = useState(null);
+  const [isCheckingAssets, setIsCheckingAssets] = useState(false); // For checkAssets button state
   const [assetsBaseUrl, setAssetsBaseUrl] = useState(''); // Base URL for assets
   
   // Parse assets when component mounts or gameData changes
@@ -28,13 +86,10 @@ const AssetManager = ({ gameData }) => {
         if (firstBackground.startsWith('http')) {
           setAssetsBaseUrl('');
         } else {
-          // Attempt to guess the base URL by looking at window.location
-          // This is a common approach for relative paths in web apps
           try {
             const url = new URL(window.location.href);
             setAssetsBaseUrl(`${url.origin}`);
           } catch (e) {
-            // If we can't determine it, leave it empty
             setAssetsBaseUrl('');
           }
         }
@@ -43,123 +98,132 @@ const AssetManager = ({ gameData }) => {
   }, [gameData]);
   
   // Filter assets based on search term
-  const filterAssets = (assetList) => {
+  const filterAssets = useCallback((assetList) => { 
     if (!searchTerm || !assetList) return assetList || [];
     return assetList.filter(asset => 
       asset.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  };
+  }, [searchTerm]);
   
   // Get full asset URL
-  const getAssetUrl = (path) => {
+  const getAssetUrl = useCallback((path) => { // useCallback for stable reference
     if (!path) return '';
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/api/')) return path; // Special case for API placeholder paths
-    if (path.startsWith('/')) return `${assetsBaseUrl}${path}`;
-    return `${assetsBaseUrl}/${path}`;
-  };
+    if (path.startsWith('http') || path.startsWith('data:')) return path; // Added data:
+    if (path.startsWith('/api/')) return path;
+    
+    let ABU = assetsBaseUrl;
+    if (ABU.endsWith('/') && path.startsWith('/')) {
+        ABU = ABU.slice(0, -1); 
+    } else if (!ABU.endsWith('/') && !path.startsWith('/') && ABU !== '') {
+        ABU = ABU + '/'; 
+    }
+    if (path.startsWith('/')) return `${ABU}${path}`;
+    return `${ABU}${path}`; 
+  }, [assetsBaseUrl]);
   
   // Check if asset actually exists
-  const checkAssetExists = (url) => {
-    // This is a simple check that works for images
-    // For a more robust solution, you'd use the Fetch API with a HEAD request
+  const checkAssetExists = useCallback((url, assetType = 'image') => { // useCallback
     return new Promise((resolve) => {
       if (!url || url.startsWith('/api/')) {
-        resolve(false);
+        resolve({ exists: false, reason: 'Placeholder or API path' });
         return;
       }
-      
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      img.src = url;
+      if (url.startsWith('data:')) {
+          resolve({ exists: true, reason: 'Data URL' });
+          return;
+      }
+
+      try {
+        new URL(url); // Will throw if scheme is missing and it's not a relative path starting with /
+      } catch (e) {
+        if (!url.startsWith('/') && !url.startsWith('http')) {
+             resolve({ exists: false, reason: 'Malformed or unresolvable relative URL' });
+             return;
+        }
+      }
+
+      if (assetType.toLowerCase().includes('image')) {
+        const img = new Image();
+        img.onload = () => resolve({ exists: true });
+        img.onerror = () => resolve({ exists: false, reason: 'Image not found or load error (404, CORS, etc.)' });
+        img.src = url;
+      } else if (assetType.toLowerCase().includes('audio') || assetType.toLowerCase().includes('sound') || assetType.toLowerCase().includes('music')) {
+        resolve({ exists: true, reason: 'Existence check for non-image assets like audio is limited client-side. Assumed OK if path seems valid.' });
+      } else {
+        resolve({ exists: true, reason: 'Existence check for this asset type is limited client-side. Assumed OK if path seems valid.' });
+      }
     });
-  };
+  }, []); // No dependencies if it only uses its arguments
   
   // Check for potential missing assets and issues
   const checkAssets = async () => {
     if (!assetData) return;
-    
+    setIsCheckingAssets(true);
+    setCheckResults(null); // Clear previous results
+
     const results = {
       missing: [],
       potential: [],
       duplicated: []
     };
     
-    // Get all assets in a flat array
     const allAssets = Object.entries(assetData)
       .filter(([key]) => key !== 'summary')
       .flatMap(([type, assets]) => assets.map(path => ({ path, type })));
     
-    // Look for potential issues
     allAssets.forEach(({ path, type }) => {
-      // Check for missing extension
-      if (!path.includes('.') && !path.startsWith('/api/')) {
-        results.potential.push({
-          path, 
-          type,
-          issue: 'Missing file extension'
-        });
+      if (!path) return; // Skip empty paths
+
+      if (!path.includes('.') && !path.startsWith('/api/') && !path.startsWith('data:')) {
+        results.potential.push({ path, type, issue: 'Missing file extension' });
       }
-      
-      // Check for placeholder paths
-      if (path.includes('placeholder') || path.includes('missing')) {
-        results.missing.push({ path, type });
+      if (path.includes('placeholder') || path.includes('missing_asset_string_pattern')) { // Be more specific if "missing" is too broad
+        results.missing.push({ path, type, issue: 'Path indicates a placeholder' });
       }
-      
-      // Check for incorrect path format (e.g., missing leading slash)
-      if (!path.startsWith('/') && !path.startsWith('http')) {
-        results.potential.push({
-          path,
-          type,
-          issue: 'Path should start with /'
-        });
+      if (!path.startsWith('/') && !path.startsWith('http') && !path.startsWith('data:')) {
+        results.potential.push({ path, type, issue: 'Relative path does not start with / (may need Base URL)'});
       }
     });
     
-    // Find duplicated assets (same content, different paths)
-    // This is a simple check based on filename
     const fileNameMap = {};
     allAssets.forEach(({ path, type }) => {
-      const fileName = path.split('/').pop();
+      if (!path) return;
+      const fileName = path.split('/').pop().split('?')[0]; // Remove query params for filename
       if (!fileName) return;
-      
-      if (!fileNameMap[fileName]) {
-        fileNameMap[fileName] = [{ path, type }];
-      } else {
-        fileNameMap[fileName].push({ path, type });
-      }
+      if (!fileNameMap[fileName]) fileNameMap[fileName] = [];
+      fileNameMap[fileName].push({ path, type });
     });
     
-    // Add duplicates to results
     Object.entries(fileNameMap)
       .filter(([_, paths]) => paths.length > 1)
       .forEach(([fileName, paths]) => {
-        results.duplicated.push({
-          fileName,
-          paths
-        });
+        results.duplicated.push({ fileName, paths });
       });
     
-    // Optionally check if images actually exist
-    // This can be slow for many assets, so limit to a reasonable number
-    const imagesToCheck = [...(assetData.backgrounds || []), ...(assetData.characterImages || [])]
-      .slice(0, 10); // Limit to first 10 images
-    
-    for (const path of imagesToCheck) {
+    const imageAssetTypes = ['backgrounds', 'characterImages', 'icons'];
+    const assetsToVerifyExistence = allAssets
+        .filter(asset => imageAssetTypes.includes(asset.type) && asset.path && !asset.path.startsWith('/api/') && !asset.path.startsWith('data:'))
+        .slice(0, 20); // Limit for performance, consider making this configurable or having a "Check All" button with warning
+
+    for (const { path, type } of assetsToVerifyExistence) {
       const url = getAssetUrl(path);
-      const exists = await checkAssetExists(url);
+      // Determine primary type for checkAssetExists (e.g. 'image' or 'audio')
+      let checkType = 'image'; // Default to image for these asset types
+      // if (type === 'soundEffects' || type === 'music') checkType = 'audio';
+
+      const status = await checkAssetExists(url, checkType);
       
-      if (!exists && !results.missing.some(item => item.path === path)) {
+      if (!status.exists && !results.missing.some(item => item.path === path)) {
         results.missing.push({
           path,
-          type: assetData.backgrounds.includes(path) ? 'backgrounds' : 'characterImages',
-          issue: 'File not found'
+          type,
+          issue: status.reason || 'File not found or inaccessible'
         });
       }
     }
     
     setCheckResults(results);
+    setIsCheckingAssets(false);
   };
   
   // Download assets list
@@ -444,34 +508,11 @@ const AssetManager = ({ gameData }) => {
               (selectedTab === 'backgrounds' || selectedTab === 'characterImages' || selectedTab === 'icons') ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-96 overflow-y-auto p-1">
                   {filterAssets(assetData[selectedTab]).map((asset, index) => (
-                    <div 
-                      key={index}
-                      className="bg-gray-900 rounded-lg overflow-hidden flex flex-col"
-                    >
-                      <div className="bg-gray-800 aspect-square flex items-center justify-center overflow-hidden">
-                        {/* Show actual image with error fallback */}
-                        <img 
-                          src={getAssetUrl(asset)}
-                          alt={asset.split('/').pop()}
-                          className="max-w-full max-h-full object-contain"
-                          onError={(e) => {
-                            // Replace with placeholder on error
-                            e.target.onerror = null;
-                            e.target.src = '';
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                        <div className="w-full h-full bg-gray-700 flex items-center justify-center text-gray-400" style={{display: 'none'}}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="p-2">
-                        <p className="text-xs text-gray-400 truncate" title={asset}>{asset}</p>
-                      </div>
-                    </div>
+                    <AssetPreviewImageItem
+                      key={`${selectedTab}-${asset}-${index}`} // More robust key
+                      assetPath={asset}
+                      getAssetUrl={getAssetUrl}
+                    />
                   ))}
                 </div>
               ) : (

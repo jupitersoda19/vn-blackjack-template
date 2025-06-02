@@ -1,6 +1,6 @@
 // components/PerksSystem.js - Cleaned with consistent design system
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { PERK_DEFINITIONS, PerkUtils } from '../../data/PerkDefinitions';
+import { PERK_DEFINITIONS, PerkUtils } from '../../utils/PerkDefinitions';
 
 // Export the hooks
 export { useRoundManagement, usePerkEffects, usePlayerStats } from '../hooks/perkHooks';

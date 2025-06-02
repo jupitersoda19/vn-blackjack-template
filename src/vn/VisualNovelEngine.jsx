@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import BlackjackGameComponent from '../blackjack/BlackjackGameComponent';
+import DanceComponent from '../dance/DanceComponent';
+import DartGame from './dart/DartGame';
 import DialogBox from '../blackjack/components/DialogBox';
 import BackgroundScene from '../blackjack/components/BackgroundScene';
 import CharacterDisplay from '../blackjack/components/CharacterDisplay';
@@ -12,6 +14,7 @@ import {
   KeyboardShortcutTooltip
 } from '../utils/visualNovelHelpers';
 import { useMacroProcessor } from '../utils/MacroProcessor';
+import { MacroProcessor } from '../utils/MacroProcessor';
 
 const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata = {} }) => {
   const themeSettings = gameMetadata?.titleScreenTheme || {};
@@ -67,31 +70,43 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
   const {
     processMacros,
     processConditions,
+    processConditionalText,
+    evaluateCondition,
     getVariableValue,
     processSingleMacro,
     getAvailableMacros,
-    getMacroDefinition
+    getMacroDefinition,
+    processOperation,
   } = useMacroProcessor(gameData);
 
-  // UPDATED: Simplified game state with fully dynamic custom variables
+  const macroProcessor = useMemo(() => {
+    if (!gameData.macros) return null;
+
+    return new MacroProcessor(
+      gameData.macros,
+      gameData.conditionalTemplates || {}
+    );
+  }, [gameData.macros, gameData.conditionalTemplates]);
+
   const [gameState, setGameState] = useState({
-    // Core game properties (built-in, always present)
     playerMoney: 1000,
     playerInitialMoney: 1000,
     profit: 0,
     completedEvents: [],
     totalHandsPlayed: 0,
 
-    // CHANGED: Dynamic custom variables - starts empty, grows as needed
     customVariables: {}
-    // No predefined keys! All custom variables are created dynamically
   });
 
   const [currentEvent, setCurrentEvent] = useState(null);
   const [currentDialog, setCurrentDialog] = useState(null);
   const [dialogIndex, setDialogIndex] = useState(0);
   const [showBlackjack, setShowBlackjack] = useState(false);
+  const [showDance, setShowDance] = useState(false);
+  const [showDart, setShowDart] = useState(false); // NEW: Dart game state
   const [blackjackParams, setBlackjackParams] = useState(null);
+  const [danceParams, setDanceParams] = useState(null);
+  const [dartParams, setDartParams] = useState(null); // NEW: Dart game parameters
   const [gameCompleted, setGameCompleted] = useState(false);
   const [characters, setCharacters] = useState({});
   const [background, setBackground] = useState(gameMetadata?.backgroundImage || '/backgrounds/default.png');
@@ -104,33 +119,61 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
   const [skipReadDialog, setSkipReadDialog] = useState(false);
   const [textSpeed, setTextSpeed] = useState(30);
 
-  // UPDATED: Helper functions for dynamic variable access
-  const getDynamicVariable = useCallback((variableName, defaultValue = null) => {
-    return getVariableValue(variableName, gameState) ?? defaultValue;
-  }, [getVariableValue, gameState]);
+  // NEW: Flow control state
+  const [pendingFlowControl, setPendingFlowControl] = useState(null);
 
-  const setDynamicVariable = useCallback((variableName, value) => {
-    setGameState(prevState => {
-      const newState = { ...prevState };
-      
-      // If it's a built-in property, set it directly
-      if (variableName in newState && variableName !== 'customVariables') {
-        newState[variableName] = value;
-      } else {
-        // Otherwise, put it in customVariables
-        newState.customVariables = {
-          ...prevState.customVariables,
-          [variableName]: value
-        };
-      }
-      
+  const processMacrosWithFlow = useCallback((macros, currentState) => {
+    if (!macroProcessor || !macros || macros.length === 0) {
+      return { flowControl: null, newState: currentState };
+    }
+
+    if (import.meta.env.DEV) {
+      console.log('Processing macros with flow control:', macros);
+      console.log('Current state before processing:', currentState);
+    }
+
+    // Use the MacroProcessor's processMacros method which now handles sequential operations
+    const updates = macroProcessor.processMacros(macros, currentState);
+
+    // Extract flow control if present
+    let flowControl = null;
+    if (updates.flowControl) {
+      flowControl = updates.flowControl;
+      delete updates.flowControl; // Remove from regular updates
+    }
+
+    // Apply updates to create new state
+    let newState = { ...currentState };
+
+    Object.entries(updates).forEach(([variable, value]) => {
       if (import.meta.env.DEV) {
-        console.log(`Set dynamic variable: ${variableName} = ${value}`);
+        console.log(`Applying update: ${variable} = ${value}`);
       }
-      
-      return newState;
+
+      // Check if this is a built-in variable (exists directly on gameState)
+      if (variable in newState && variable !== 'customVariables') {
+        newState[variable] = value;
+      } else {
+        // This is a custom variable
+        if (!newState.customVariables) {
+          newState.customVariables = {};
+        }
+        newState.customVariables[variable] = value;
+      }
     });
-  }, []);
+
+    if (import.meta.env.DEV) {
+      console.log('New state after processing:', newState);
+      if (flowControl) {
+        console.log('Flow control triggered:', flowControl);
+      }
+    }
+
+    return {
+      flowControl,
+      newState
+    };
+  }, [macroProcessor]);
 
   // Update game data when playerData changes
   useEffect(() => {
@@ -159,73 +202,21 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     }
   }, [gameData.events]);
 
-  // UPDATED: Enhanced processConditionalText to work with dynamic variables
-  const processConditionalText = useCallback((conditionalText) => {
-    if (!conditionalText || typeof conditionalText !== 'object') return '';
-
-    let additionalText = '';
-
-    Object.entries(conditionalText).forEach(([conditionKey, text]) => {
-      // Handle multiple conditions with + separator
-      const conditions = conditionKey.split(' + ');
-      let allConditionsMet = true;
-
-      for (const condition of conditions) {
-        let conditionMet = false;
-
-        if (condition.includes(':')) {
-          // Template condition like "likesYou:rachel"
-          const [templateName, character] = condition.split(':');
-          const template = gameData.conditionalTemplates[templateName];
-          if (template) {
-            let variableName = template.variable.replace('{character}', character);
-            const currentValue = getVariableValue(variableName, gameState);
-            conditionMet = evaluateCondition(currentValue, template.operator, template.value);
-          }
-        } else if (condition.includes(' ')) {
-          // Inline condition like "playerMoney >= 1000"
-          const parts = condition.split(' ');
-          if (parts.length === 3) {
-            const [variable, operator, value] = parts;
-            const currentValue = getVariableValue(variable, gameState);
-            const numValue = isNaN(parseFloat(value)) ? value.replace(/"/g, '') : parseFloat(value);
-            conditionMet = evaluateCondition(currentValue, operator, numValue);
-          }
-        } else {
-          // Simple template condition
-          const template = gameData.conditionalTemplates[condition];
-          if (template) {
-            const currentValue = getVariableValue(template.variable, gameState);
-            conditionMet = evaluateCondition(currentValue, template.operator, template.value);
-          }
-        }
-
-        if (!conditionMet) {
-          allConditionsMet = false;
-          break;
-        }
+  // NEW: Handle pending flow control
+  useEffect(() => {
+    if (pendingFlowControl) {
+      if (import.meta.env.DEV) {
+        console.log('Executing pending flow control:', pendingFlowControl);
       }
 
-      if (allConditionsMet) {
-        additionalText += text;
-      }
-    });
+      const timer = setTimeout(() => {
+        startEvent(pendingFlowControl);
+        setPendingFlowControl(null);
+      }, 100); // Small delay to ensure state updates complete
 
-    return additionalText;
-  }, [gameData.conditionalTemplates, getVariableValue, gameState]);
-
-  // Helper function to evaluate conditions
-  const evaluateCondition = useCallback((currentValue, operator, conditionValue) => {
-    switch (operator) {
-      case '>=': return currentValue >= conditionValue;
-      case '<=': return currentValue <= conditionValue;
-      case '>': return currentValue > conditionValue;
-      case '<': return currentValue < conditionValue;
-      case '==': return currentValue == conditionValue;
-      case '!=': return currentValue != conditionValue;
-      default: return false;
+      return () => clearTimeout(timer);
     }
-  }, []);
+  }, [pendingFlowControl]);
 
   const handleToggleSkipRead = useCallback(() => {
     setSkipReadDialog(prev => !prev);
@@ -253,7 +244,9 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     }
   }, []);
 
-  const updateSceneFromDialog = useCallback((dialog) => {
+  const updateSceneFromDialog = useCallback((dialog, finalState = null) => {
+    const stateToUse = finalState || gameState;
+
     if (dialog.background) {
       setBackground(dialog.background);
       setBackgroundTransition(dialog.backgroundTransition || 'none');
@@ -264,79 +257,204 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
       setCharacters(dialog.characters);
     }
 
-    // Filter choices based on conditions before setting them
+    // FIXED: Process choices with proper custom variable access
     if (dialog.choices) {
       const validChoices = dialog.choices.filter(choice => {
         if (!choice.requiresCondition) {
-          return true; // No condition required, always show
+          return true;
         }
 
-        // Check condition using new system
-        if (typeof choice.requiresCondition === 'string') {
-          if (choice.requiresCondition.includes(':')) {
-            const [templateName, character] = choice.requiresCondition.split(':');
-            const template = gameData.conditionalTemplates[templateName];
-            if (template) {
-              let variableName = template.variable.replace('{character}', character);
-              const currentValue = getVariableValue(variableName, gameState);
-              return evaluateCondition(currentValue, template.operator, template.value);
+        try {
+          // Use MacroProcessor to evaluate complex conditions with proper variable access
+          if (macroProcessor) {
+            const conditionMet = macroProcessor.parseComplexCondition(choice.requiresCondition, stateToUse);
+
+            if (import.meta.env.DEV) {
+              console.log(`Choice condition "${choice.requiresCondition}" evaluated to: ${conditionMet}`);
+              console.log('Available variables for condition check:', {
+                builtin: Object.keys(stateToUse).filter(k => k !== 'customVariables'),
+                custom: Object.keys(stateToUse.customVariables || {})
+              });
             }
-          } else {
-            const template = gameData.conditionalTemplates[choice.requiresCondition];
-            if (template) {
-              const currentValue = getVariableValue(template.variable, gameState);
-              return evaluateCondition(currentValue, template.operator, template.value);
-            }
+
+            return conditionMet;
           }
+          return true; // Fallback if no macro processor
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.warn('Error evaluating choice condition:', choice.requiresCondition, error);
+          }
+          return false;
         }
-        return false;
       });
 
       setPlayerChoices(validChoices.length > 0 ? validChoices : null);
     } else {
       setPlayerChoices(null);
     }
-  }, [gameData.conditionalTemplates, getVariableValue, gameState, evaluateCondition]);
+  }, [gameState, macroProcessor]);
 
-  // UPDATED: Enhanced processDialogText to work with any dynamic variable
-  const processDialogText = useCallback((dialogList, gameResult = null) => {
-    return dialogList.map(dialog => {
-      if (!dialog.text || typeof dialog.text !== 'string') return dialog;
+  const processDialogTextWithState = useCallback((dialogText, state) => {
+    if (!dialogText || typeof dialogText !== 'string') {
+      return dialogText;
+    }
 
-      // Get current values (existing functionality)
-      const moneyValue = gameResult?.playerMoney || gameState.playerMoney;
-      const profitValue = gameResult?.profit || gameState.profit;
-      const resultText = gameResult?.message || '';
+    let processedText = dialogText;
 
-      // Process macros if present using new system
-      if (dialog.macros) {
-        processMacros(dialog.macros, gameState, setGameState);
+    // Replace variables with current values
+    processedText = processedText.replace(/{(\w+)}/g, (match, variableName) => {
+      // Skip special variables that are handled separately
+      if (['money', 'profit', 'result', 'grade', 'accuracy', 'perfectHits', 'totalBeats', 'partner', 'playerScore', 'opponentScore', 'playerAverage', 'opponentAverage', 'winner', 'opponentName'].includes(variableName)) {
+        return match;
       }
 
-      // Start with base text replacement (existing functionality)
-      let processedText = dialog.text
-        .replace('{money}', moneyValue)
-        .replace('{profit}', profitValue)
-        .replace('{result}', resultText);
+      // FIXED: Use getVariableValue from MacroProcessor instead of direct state access
+      const value = getVariableValue(variableName, state);
 
-      // UPDATED: Replace ALL custom variables dynamically with smart formatting
-      // This regex finds all {variableName} patterns
+      if (value === null || value === undefined) {
+        if (import.meta.env.DEV) {
+          console.warn(`Variable ${variableName} not found in state`);
+          console.log('Available built-in variables:', Object.keys(state).filter(k => k !== 'customVariables'));
+          console.log('Available custom variables:', Object.keys(state.customVariables || {}));
+        }
+        return match; // Keep placeholder if variable doesn't exist
+      }
+
+      // Smart formatting based on value type
+      if (Array.isArray(value)) {
+        if (value.length === 0) {
+          return "none";
+        } else if (value.length <= 3) {
+          return value.join(", ");
+        } else {
+          return `${value.slice(0, 3).join(", ")} and ${value.length - 3} more`;
+        }
+      } else if (typeof value === 'boolean') {
+        return value ? "yes" : "no";
+      } else if (typeof value === 'number') {
+        return value.toString();
+      } else if (typeof value === 'string') {
+        return value;
+      } else {
+        return String(value);
+      }
+    });
+
+    return processedText;
+  }, [getVariableValue]);
+
+  const processCompleteDialog = useCallback((dialog, currentState) => {
+    let finalState = { ...currentState };
+    let flowControl = null;
+
+    // Process macros first if they exist
+    if (dialog.macros && dialog.macros.length > 0) {
+      const macroResult = processMacrosWithFlow(dialog.macros, finalState);
+
+      finalState = macroResult.newState;
+      flowControl = macroResult.flowControl;
+    }
+
+    // Process dialog text with final state
+    let processedText = processDialogTextWithState(dialog.text, finalState);
+
+    // Process conditions with final state using MacroProcessor
+    if (dialog.conditions && macroProcessor) {
+      for (const conditionKey of dialog.conditions) {
+        const template = gameData.conditionalTemplates?.[conditionKey];
+        if (template) {
+          const conditionMet = macroProcessor.evaluateTemplateCondition(
+            template,
+            null,
+            finalState
+          );
+
+          if (conditionMet) {
+            processedText += template.text;
+          }
+        }
+      }
+    }
+
+    // Process conditional text with final state using MacroProcessor
+    if (dialog.conditionalText) {
+      processedText += processConditionalText(dialog.conditionalText, finalState);
+    }
+
+    return {
+      processedDialog: {
+        ...dialog,
+        text: processedText
+      },
+      finalState,
+      flowControl
+    };
+  }, [processMacrosWithFlow, processDialogTextWithState, macroProcessor, gameData.conditionalTemplates, processConditionalText]);
+
+  const processDialogText = useCallback((dialogList, gameResult = null, specificState = null) => {
+    // Use specificState if provided, otherwise use current gameState
+    const stateToUse = specificState || gameState;
+
+    return dialogList.map(dialog => {
+      if (!dialog.text || typeof dialog.text !== 'string') return dialog;
+      console.log("debugger  "+ gameResult?.playerMoney || stateToUse.playerMoney);
+      // Get current values for special variables (existing functionality)
+      const moneyValue = gameResult?.playerMoney || stateToUse.playerMoney;
+      const profitValue = gameResult?.profit || stateToUse.profit;
+      const resultText = gameResult?.message || '';
+      
+      // Dance-specific variables
+      const gradeValue = gameResult?.grade || '';
+      const accuracyValue = gameResult?.accuracy || '';
+      const perfectHitsValue = gameResult?.perfectHits || '';
+      const totalBeatsValue = gameResult?.totalBeats || '';
+      const partnerValue = gameResult?.partner || '';
+      
+      // NEW: Dart-specific variables
+      const playerScoreValue = gameResult?.playerScore || '';
+      const opponentScoreValue = gameResult?.opponentScore || '';
+      const playerAverageValue = gameResult?.playerAverage || '';
+      const opponentAverageValue = gameResult?.opponentAverage || '';
+      const winnerValue = gameResult?.winner || '';
+      const opponentNameValue = gameResult?.opponentName || '';
+
+      // Start with base text replacement for special variables
+      let processedText = dialog.text
+        .replace(/\{money\}/g, moneyValue)
+        .replace(/\{profit\}/g, profitValue)
+        .replace(/\{result\}/g, resultText)
+        .replace(/\{grade\}/g, gradeValue)
+        .replace(/\{accuracy\}/g, accuracyValue)
+        .replace(/\{perfectHits\}/g, perfectHitsValue)
+        .replace(/\{totalBeats\}/g, totalBeatsValue)
+        .replace(/\{partner\}/g, partnerValue)
+        // NEW: Dart-specific replacements
+        .replace(/\{playerScore\}/g, playerScoreValue)
+        .replace(/\{opponentScore\}/g, opponentScoreValue)
+        .replace(/\{playerAverage\}/g, playerAverageValue)
+        .replace(/\{opponentAverage\}/g, opponentAverageValue)
+        .replace(/\{winner\}/g, winnerValue)
+        .replace(/\{opponentName\}/g, opponentNameValue);
+
+      // FIXED: Replace ALL other variables using getVariableValue
       processedText = processedText.replace(/{(\w+)}/g, (match, variableName) => {
-        // Skip if it's already been replaced (money, profit, result)
-        if (['money', 'profit', 'result'].includes(variableName)) {
+        // Skip if it's already been replaced
+        if (['money', 'profit', 'result', 'grade', 'accuracy', 'perfectHits', 'totalBeats', 'partner', 'playerScore', 'opponentScore', 'playerAverage', 'opponentAverage', 'winner', 'opponentName'].includes(variableName)) {
           return match;
         }
 
-        // Get the value using our dynamic variable system
-        const value = getVariableValue(variableName, gameState);
-        
-        if (value === null) {
+        // FIXED: Use getVariableValue instead of direct access
+        const value = getVariableValue(variableName, stateToUse);
+
+        if (value === null || value === undefined) {
+          if (import.meta.env.DEV) {
+            console.warn(`Variable ${variableName} not found in state during dialog processing`);
+          }
           return match; // Keep placeholder if variable doesn't exist
         }
 
-        // ENHANCED: Smart formatting based on value type
+        // Smart formatting based on value type
         if (Array.isArray(value)) {
-          // Format arrays nicely
           if (value.length === 0) {
             return "none";
           } else if (value.length <= 3) {
@@ -345,28 +463,23 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
             return `${value.slice(0, 3).join(", ")} and ${value.length - 3} more`;
           }
         } else if (typeof value === 'boolean') {
-          // Format booleans
           return value ? "yes" : "no";
         } else if (typeof value === 'number') {
-          // Format numbers (keep as-is for now, could add formatting later)
           return value.toString();
         } else if (typeof value === 'string') {
-          // Format strings
           return value;
         } else {
-          // Fallback for other types
           return String(value);
         }
       });
 
       // Process conditions using new system
       if (dialog.conditions) {
-        processedText += processConditions(dialog.conditions, gameState);
+        processedText += processConditions(dialog.conditions, stateToUse);
       }
 
-      // Process conditional text object using new system
       if (dialog.conditionalText) {
-        processedText += processConditionalText(dialog.conditionalText);
+        processedText += processConditionalText(dialog.conditionalText, stateToUse);
       }
 
       return {
@@ -376,31 +489,64 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         textAnimation: dialog.textAnimation || 'typewriter'
       };
     });
-  }, [gameState, textSpeed, processMacros, processConditions, processConditionalText, getVariableValue]);
+  }, [gameState, textSpeed, processConditions, processConditionalText, getVariableValue]);
 
   const startBlackjackGame = useCallback(() => {
     setShowBlackjack(true);
+    setShowDance(false);
+    setShowDart(false); // NEW: Ensure dart is hidden
+  }, []);
+
+  const startDanceGame = useCallback(() => {
+    setShowDance(true);
+    setShowBlackjack(false);
+    setShowDart(false); // NEW: Ensure dart is hidden
+  }, []);
+
+  // NEW: Start dart game function
+  const startDartGame = useCallback(() => {
+    setShowDart(true);
+    setShowBlackjack(false);
+    setShowDance(false);
   }, []);
 
   const startEvent = useCallback((eventKey, previousGameResult = null) => {
     if (!gameData.events?.length) return;
 
+    if (import.meta.env.DEV) {
+      console.log('Starting event:', eventKey);
+    }
+
     const event = gameData.events.find(e => e.key === eventKey);
-    if (!event) return;
+    if (!event) {
+      if (import.meta.env.DEV) {
+        console.warn('Event not found:', eventKey);
+      }
+      return;
+    }
 
     setCurrentEvent(event);
     setShowBlackjack(false);
+    setShowDance(false);
+    setShowDart(false); // NEW: Reset dart state
     setGameCompleted(false);
+    setPendingFlowControl(null);
 
+    let currentStateForProcessing = { ...gameState };
+
+    // Handle previous game result
     if (previousGameResult) {
-      setGameState(prevState => ({
-        ...prevState,
+      currentStateForProcessing = {
+        ...currentStateForProcessing,
         playerMoney: previousGameResult.playerMoney,
         profit: previousGameResult.profit,
-        totalHandsPlayed: prevState.totalHandsPlayed + previousGameResult.handsPlayed,
-        completedEvents: [...prevState.completedEvents, currentEvent?.key].filter(Boolean)
-      }));
+        totalHandsPlayed: currentStateForProcessing.totalHandsPlayed + previousGameResult.handsPlayed,
+        completedEvents: [...currentStateForProcessing.completedEvents, currentEvent?.key].filter(Boolean)
+      };
 
+      setGameState(currentStateForProcessing);
+
+      // Set parameters for all games
       setBlackjackParams(prevParams => {
         const baseParams = prevParams || {
           playerIndex,
@@ -415,50 +561,121 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
           dealerCost: previousGameResult.opponentsMoney?.[0] || 5000
         };
       });
+
+      setDanceParams(prevParams => {
+        const baseParams = prevParams || {
+          partner: "Unknown",
+          song: { bpm: 120, duration: 180 },
+          difficulty: "medium"
+        };
+
+        return {
+          ...baseParams,
+          gameState: currentStateForProcessing
+        };
+      });
+
+      // NEW: Set dart parameters
+      setDartParams(prevParams => {
+        const baseParams = prevParams || {
+          opponentName: "Opponent",
+          opponentSkill: "medium",
+          dartsPerPlayer: 9,
+          gameMode: "highest_score"
+        };
+
+        return {
+          ...baseParams,
+          gameState: currentStateForProcessing
+        };
+      });
     } else {
       const shouldUsePersistentMoney = event.usePreviousMoney === true;
 
       if (!shouldUsePersistentMoney) {
         setBlackjackParams(null);
+        setDanceParams(null);
+        setDartParams(null); // NEW: Reset dart params
       } else {
         setBlackjackParams({
           playerIndex,
           dealerIndex,
           playerEvent: event.playerEvent || "Default Event",
           dealerEvent: event.dealerEvent || "Default Event",
-          playerCost: gameState.playerMoney,
+          playerCost: currentStateForProcessing.playerMoney,
           dealerCost: 5000,
           specialRules: event.specialRules
+        });
+
+        setDanceParams({
+          partner: event.partner || "Unknown",
+          song: event.song || { bpm: 120, duration: 180 },
+          difficulty: event.difficulty || "medium",
+          gameState: currentStateForProcessing
+        });
+
+        // NEW: Set default dart parameters
+        setDartParams({
+          opponentName: event.opponentName || "Opponent",
+          opponentSkill: event.opponentSkill || "medium",
+          dartsPerPlayer: event.dartsPerPlayer || 9,
+          gameMode: event.gameMode || "highest_score",
+          gameState: currentStateForProcessing
         });
       }
     }
 
     if (event.preDialog?.length) {
-      const processedDialog = processDialogText(event.preDialog, previousGameResult);
-      setCurrentDialog(processedDialog);
+      // Process ALL dialogs with macros-first flow
+      const processedDialogs = [];
+      let workingState = currentStateForProcessing;
+
+      for (let i = 0; i < event.preDialog.length; i++) {
+        const dialog = event.preDialog[i];
+        const result = processCompleteDialog(dialog, workingState);
+
+        if (result.flowControl) {
+          setPendingFlowControl(result.flowControl);
+          return; // Exit early if flow control is triggered
+        }
+
+        processedDialogs.push(result.processedDialog);
+        workingState = result.finalState; // Use updated state for next dialog
+      }
+
+      // Update the final state after processing all dialogs
+      setGameState(workingState);
+
+      setCurrentDialog(processedDialogs);
       setDialogIndex(0);
 
-      if (processedDialog[0]) {
-        updateSceneFromDialog(processedDialog[0]);
+      if (processedDialogs[0]) {
+        updateSceneFromDialog(processedDialogs[0], workingState);
       }
     } else {
+      // Default to blackjack if no specific game is set
       startBlackjackGame();
     }
-  }, [currentEvent, dealerIndex, gameData.events, gameState.playerMoney, playerIndex, processDialogText, startBlackjackGame, updateSceneFromDialog]);
+  }, [currentEvent, dealerIndex, gameData.events, gameState, playerIndex, startBlackjackGame, startDanceGame, startDartGame, updateSceneFromDialog, processCompleteDialog]);
 
   const handleNext = useCallback(() => {
-    if (!showBlackjack) {
+    if (!showBlackjack && !showDance && !showDart) { // NEW: Check all game states
       if (dialogIndex < currentDialog.length - 1) {
         const nextIndex = dialogIndex + 1;
         setDialogIndex(nextIndex);
 
         if (currentDialog[nextIndex]) {
+          // Dialog is already processed with correct state, just update scene
           updateSceneFromDialog(currentDialog[nextIndex]);
         }
       } else {
         if (!gameCompleted) {
           if (blackjackParams) {
             startBlackjackGame();
+          } else if (danceParams) {
+            startDanceGame();
+          } else if (dartParams) { // NEW: Check for dart params
+            startDartGame();
           } else if (currentEvent?.nextEvent) {
             startEvent(currentEvent.nextEvent);
           }
@@ -469,26 +686,47 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         }
       }
     }
-  }, [blackjackParams, currentDialog, currentEvent, dialogIndex, gameCompleted, showBlackjack, startBlackjackGame, startEvent, updateSceneFromDialog]);
+  }, [blackjackParams, danceParams, dartParams, currentDialog, currentEvent, dialogIndex, gameCompleted, showBlackjack, showDance, showDart, startBlackjackGame, startDanceGame, startDartGame, startEvent, updateSceneFromDialog]);
 
   const handleChoiceSelected = useCallback((choice) => {
     setPlayerChoices(null);
 
-    // Process macros from choice using new system
-    if (choice.macros) {
-      processMacros(choice.macros, gameState, setGameState);
+    if (import.meta.env.DEV) {
+      console.log('Processing choice:', choice.text);
+      console.log('Choice macros:', choice.macros);
     }
 
-    console.log('Processing choice:', choice.text);
+    let currentState = { ...gameState };
 
+    // Process macros from choice
+    if (choice.macros && choice.macros.length > 0) {
+      const { flowControl, newState } = processMacrosWithFlow(choice.macros, currentState);
+
+      if (newState) {
+        setGameState(newState);
+        currentState = newState;
+      }
+
+      if (flowControl) {
+        if (import.meta.env.DEV) {
+          console.log('Choice triggered flow control:', flowControl);
+        }
+        setPendingFlowControl(flowControl);
+        return;
+      }
+    }
+
+    // Continue with existing logic
     if (choice.nextEvent) {
       startEvent(choice.nextEvent);
     } else if (choice.action === 'startGame' && choice.eventParams) {
-      console.log('Starting game with params:', choice.eventParams);
+      if (import.meta.env.DEV) {
+        console.log('Starting game with params:', choice.eventParams);
+      }
       const params = {
         ...choice.eventParams,
         playerCost: choice.eventParams.usePreviousMoney
-          ? gameState.playerMoney
+          ? currentState.playerMoney
           : (choice.eventParams.playerCost || getCostForEvent(choice.eventParams.playerEvent, playerData, playerIndex)),
         dealerCost: choice.eventParams.dealerCost || getCostForEvent(choice.eventParams.dealerEvent, playerData, dealerIndex),
         playerIndex,
@@ -496,23 +734,59 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
       };
 
       setBlackjackParams(params);
-      console.log('Set blackjack params:', params);
 
       if (dialogIndex < currentDialog.length - 1) {
         handleNext();
       } else {
-        console.log('Starting blackjack game immediately');
         startBlackjackGame();
       }
-    } else if (choice.action === 'exit') {
+    } 
+    else if (choice.action === 'startDance' && choice.eventParams) {
+      if (import.meta.env.DEV) {
+        console.log('Starting dance with params:', choice.eventParams);
+      }
+      const params = {
+        ...choice.eventParams,
+        gameState: currentState
+      };
+
+      setDanceParams(params);
+
+      if (dialogIndex < currentDialog.length - 1) {
+        handleNext();
+      } else {
+        startDanceGame();
+      }
+    }
+    // NEW: Handle startDart action
+    else if (choice.action === 'startDart' && choice.eventParams) {
+      if (import.meta.env.DEV) {
+        console.log('Starting dart with params:', choice.eventParams);
+      }
+      const params = {
+        ...choice.eventParams,
+        gameState: currentState
+      };
+
+      setDartParams(params);
+
+      if (dialogIndex < currentDialog.length - 1) {
+        handleNext();
+      } else {
+        startDartGame();
+      }
+    }
+    else if (choice.action === 'exit') {
       window.location.reload();
     } else {
       handleNext();
     }
-  }, [currentDialog, dealerIndex, dialogIndex, gameState, getCostForEvent, handleNext, playerData, playerIndex, startBlackjackGame, startEvent, processMacros]);
+  }, [currentDialog, dealerIndex, dialogIndex, gameState, getCostForEvent, handleNext, playerData, playerIndex, startBlackjackGame, startDanceGame, startDartGame, startEvent, processMacrosWithFlow]);
 
   const handleGameComplete = useCallback((result, finalScore) => {
     setShowBlackjack(false);
+    setShowDance(false);
+    setShowDart(false); // NEW: Hide dart game
     setGameCompleted(true);
 
     const gameResult = {
@@ -524,17 +798,29 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
       initialPlayerMoney: finalScore.initialPlayer
     };
 
-    setGameState(prevState => ({
-      ...prevState,
+    // Update base game state first
+    const newBaseState = {
+      ...gameState,
       playerMoney: finalScore.player,
       profit: finalScore.player - finalScore.initialPlayer,
-      totalHandsPlayed: prevState.totalHandsPlayed + finalScore.handsPlayed,
-      completedEvents: [...prevState.completedEvents, currentEvent?.key].filter(Boolean)
-    }));
+      totalHandsPlayed: gameState.totalHandsPlayed + finalScore.handsPlayed,
+      completedEvents: [...gameState.completedEvents, currentEvent?.key].filter(Boolean)
+    };
 
-    // Apply game completion macros using new system
+    // Apply game completion macros
     const gameCompletionMacros = ['addGamePlayed:blackjack'];
-    processMacros(gameCompletionMacros, gameState, setGameState);
+    if (gameCompletionMacros.length > 0) {
+      const { flowControl, newState } = processMacrosWithFlow(gameCompletionMacros, newBaseState);
+
+      setGameState(newState);
+
+      if (flowControl) {
+        setPendingFlowControl(flowControl);
+        return; // Exit early if flow control is triggered
+      }
+    } else {
+      setGameState(newBaseState);
+    }
 
     if (currentEvent?.postDialog?.length) {
       const postDialog = processDialogText(currentEvent.postDialog, gameResult);
@@ -549,9 +835,133 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         startEvent(currentEvent.nextEvent, gameResult);
       }
     }
-  }, [currentEvent, processDialogText, startEvent, updateSceneFromDialog, processMacros, gameState]);
+  }, [currentEvent, processDialogText, startEvent, updateSceneFromDialog, processMacrosWithFlow, gameState]);
 
-  // UPDATED: Enhanced save/load to handle dynamic variables
+  const handleDanceComplete = useCallback((result, gameSpecificData) => {
+    setShowDance(false);
+    setShowBlackjack(false);
+    setShowDart(false); // NEW: Hide dart game
+    setGameCompleted(true);
+
+    // Create a result structure similar to blackjack, but include dance-specific data
+    const gameResult = {
+      message: result,
+      playerMoney: gameSpecificData.playerMoney || gameState.playerMoney,
+      opponentsMoney: [gameSpecificData.playerMoney || gameState.playerMoney], // Keep same money for dance
+      profit: 0, // Dance doesn't involve money by default
+      handsPlayed: 1, // One dance session
+      initialPlayerMoney: gameSpecificData.playerMoney || gameState.playerMoney,
+      // Dance-specific data for dialog processing
+      grade: gameSpecificData.grade,
+      accuracy: gameSpecificData.accuracy,
+      perfectHits: gameSpecificData.perfectHits,
+      totalBeats: gameSpecificData.totalBeats,
+      partner: gameSpecificData.partner
+    };
+
+    // Update base game state with dance-specific data
+    const newBaseState = {
+      ...gameState,
+      // Dance doesn't change money by default, but could be customized
+      completedEvents: [...gameState.completedEvents, currentEvent?.key].filter(Boolean)
+    };
+
+    // Apply dance completion macros - could include relationship updates, etc.
+    const danceCompletionMacros = ['addGamePlayed:dance'];
+    if (danceCompletionMacros.length > 0) {
+      const { flowControl, newState } = processMacrosWithFlow(danceCompletionMacros, newBaseState);
+
+      setGameState(newState);
+
+      if (flowControl) {
+        setPendingFlowControl(flowControl);
+        return;
+      }
+    } else {
+      setGameState(newBaseState);
+    }
+
+    if (currentEvent?.postDialog?.length) {
+      const postDialog = processDialogText(currentEvent.postDialog, gameResult);
+      setCurrentDialog(postDialog);
+      setDialogIndex(0);
+
+      if (postDialog[0]) {
+        updateSceneFromDialog(postDialog[0]);
+      }
+    } else {
+      if (currentEvent?.nextEvent) {
+        startEvent(currentEvent.nextEvent, gameResult);
+      }
+    }
+  }, [currentEvent, processDialogText, startEvent, updateSceneFromDialog, processMacrosWithFlow, gameState]);
+
+  // NEW: Handle dart game completion
+  const handleDartComplete = useCallback((result, dartGameData) => {
+    setShowDart(false);
+    setShowBlackjack(false);
+    setShowDance(false);
+    setGameCompleted(true);
+
+    // Create a result structure for dart game
+    const gameResult = {
+      message: result,
+      playerMoney: gameState.playerMoney, // Dart doesn't change money by default
+      opponentsMoney: [gameState.playerMoney],
+      profit: 0, // Dart doesn't involve money by default
+      handsPlayed: 1, // One dart session
+      initialPlayerMoney: gameState.playerMoney,
+      // NEW: Dart-specific data for dialog processing
+      playerScore: dartGameData.playerScore,
+      opponentScore: dartGameData.opponentScore,
+      playerAverage: dartGameData.playerAverage,
+      opponentAverage: dartGameData.opponentAverage,
+      dartsThrown: dartGameData.dartsThrown,
+      accuracy: dartGameData.accuracy,
+      opponentName: dartGameData.opponentName,
+      opponentSkill: dartGameData.opponentSkill,
+      gameMode: dartGameData.gameMode,
+      winner: dartGameData.winner,
+      scoreDifference: dartGameData.scoreDifference
+    };
+
+    // Update base game state
+    const newBaseState = {
+      ...gameState,
+      completedEvents: [...gameState.completedEvents, currentEvent?.key].filter(Boolean)
+    };
+
+    // Apply dart completion macros
+    const dartCompletionMacros = ['addGamePlayed:dart'];
+    if (dartCompletionMacros.length > 0) {
+      const { flowControl, newState } = processMacrosWithFlow(dartCompletionMacros, newBaseState);
+
+      setGameState(newState);
+
+      if (flowControl) {
+        setPendingFlowControl(flowControl);
+        return;
+      }
+    } else {
+      setGameState(newBaseState);
+    }
+
+    if (currentEvent?.postDialog?.length) {
+      const postDialog = processDialogText(currentEvent.postDialog, gameResult);
+      setCurrentDialog(postDialog);
+      setDialogIndex(0);
+
+      if (postDialog[0]) {
+        updateSceneFromDialog(postDialog[0]);
+      }
+    } else {
+      if (currentEvent?.nextEvent) {
+        startEvent(currentEvent.nextEvent, gameResult);
+      }
+    }
+  }, [currentEvent, processDialogText, startEvent, updateSceneFromDialog, processMacrosWithFlow, gameState]);
+
+  // UPDATED: Enhanced save/load to handle dynamic variables and dart state
   const saveGame = useCallback(() => {
     if (!currentEvent) return null;
 
@@ -560,12 +970,16 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
       dialogIndex,
       gameState, // This now includes all dynamic customVariables
       blackjackParams,
+      danceParams,
+      dartParams, // NEW: Save dart parameters
       gameCompleted,
       background,
       backgroundTransition,
       backgroundEffects,
+      showDance,
+      showDart, // NEW: Save dart state
     };
-  }, [currentEvent, dialogIndex, gameState, blackjackParams, gameCompleted, background, backgroundTransition, backgroundEffects]);
+  }, [currentEvent, dialogIndex, gameState, blackjackParams, danceParams, dartParams, gameCompleted, background, backgroundTransition, backgroundEffects, showDance, showDart]);
 
   const loadGame = useCallback((savedData) => {
     if (!savedData || !savedData.currentEvent) return false;
@@ -578,9 +992,14 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
 
     setCurrentEvent(event);
     setShowBlackjack(false);
+    setShowDance(savedData.showDance || false);
+    setShowDart(savedData.showDart || false); // NEW: Load dart state
     setGameCompleted(savedData.gameCompleted);
+    setPendingFlowControl(null); // Clear any pending flow control
 
     setBlackjackParams(savedData.blackjackParams);
+    setDanceParams(savedData.danceParams || null);
+    setDartParams(savedData.dartParams || null); // NEW: Load dart parameters
 
     setBackground(savedData.background);
     setBackgroundTransition(savedData.backgroundTransition || 'none');
@@ -638,14 +1057,14 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
     onAdjustTextSpeed: setTextSpeed,
     isAutoAdvanceEnabled: autoAdvance,
     isSkipEnabled: skipReadDialog,
-    showBlackjack,
+    showBlackjack: showBlackjack || showDance || showDart, // NEW: Include dart in game state check
     gameId: gameId.current,
     currentDialog
   });
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (showBlackjack || isMenuOpen) return;
+      if (showBlackjack || showDance || showDart || isMenuOpen) return; // NEW: Include dart in key handling
 
       if (e.key === 'a' || e.key === 'A') {
         handleToggleAutoAdvance();
@@ -658,7 +1077,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showBlackjack, isMenuOpen, handleToggleAutoAdvance, handleToggleSkipRead]);
+  }, [showBlackjack, showDance, showDart, isMenuOpen, handleToggleAutoAdvance, handleToggleSkipRead]); // NEW: Include showDart
 
   const { autoSaves, createSave, loadSave, deleteSave } = useAutoSave({
     gameId: gameId.current,
@@ -672,11 +1091,12 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
 
     return {
       ...currentDialog[dialogIndex],
-      textSpeed: textSpeed
+      textSpeed: textSpeed,
+      textAnimation: currentDialog[dialogIndex].textAnimation || 'typewriter'
     };
   }, [currentDialog, dialogIndex, textSpeed]);
 
-  // UPDATED: Enhanced debug info for dynamic variables
+  // UPDATED: Enhanced debug info for dynamic variables and flow control
   useEffect(() => {
     if (import.meta.env.DEV) {
       console.log('Available macros:', getAvailableMacros());
@@ -684,8 +1104,11 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
       console.log('Conditional templates:', gameData.conditionalTemplates);
       console.log('Current dynamic variables:', gameState.customVariables);
       console.log('Total custom variables count:', Object.keys(gameState.customVariables).length);
+      if (pendingFlowControl) {
+        console.log('Pending flow control:', pendingFlowControl);
+      }
     }
-  }, [gameData, getAvailableMacros, gameState.customVariables]);
+  }, [gameData, getAvailableMacros, gameState.customVariables, pendingFlowControl]);
 
   if (!gameData.events?.length) {
     return (
@@ -703,7 +1126,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
       className="w-full h-screen relative overflow-hidden"
       style={{ backgroundColor: theme.backgroundColor || theme.secondaryColor }}
     >
-      {!showBlackjack && (
+      {!showBlackjack && !showDance && !showDart && ( // NEW: Hide button during all games
         <button
           className="absolute top-4 left-4 px-3 py-1 rounded z-50 text-sm flex items-center"
           style={{
@@ -720,7 +1143,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         </button>
       )}
 
-      {!showBlackjack && (
+      {!showBlackjack && !showDance && !showDart && ( // NEW: Hide during all games
         <div className="absolute top-4 right-4 flex items-center z-50 space-x-2">
           <div
             className="px-3 py-1 rounded flex items-center"
@@ -741,7 +1164,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
             )}
           </div>
 
-          {/* UPDATED: Enhanced Debug Info */}
+          {/* UPDATED: Enhanced Debug Info with Flow Control */}
           {import.meta.env.DEV && (
             <>
               <div
@@ -766,6 +1189,19 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
               >
                 📊 {Object.keys(gameState.customVariables).length}
               </div>
+              {pendingFlowControl && (
+                <div
+                  className="px-2 py-1 rounded text-xs"
+                  style={{
+                    backgroundColor: `${theme.accentColor}99`,
+                    color: theme.textColor,
+                    border: `1px solid ${theme.accentColor}`
+                  }}
+                  title={`Pending Flow Control: ${pendingFlowControl}`}
+                >
+                  🎬 Flow
+                </div>
+              )}
             </>
           )}
 
@@ -801,7 +1237,7 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         </div>
       )}
 
-      {!showBlackjack && (autoAdvance || skipReadDialog) && (
+      {!showBlackjack && !showDance && !showDart && (autoAdvance || skipReadDialog) && ( // NEW: Hide during all games
         <div className="absolute top-14 right-4 z-50 flex space-x-2">
           {autoAdvance && (
             <div
@@ -836,8 +1272,9 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         effects={backgroundEffects}
       />
 
-      {!showBlackjack && <CharacterDisplay characters={characters} />}
+      {!showBlackjack && !showDance && !showDart && <CharacterDisplay characters={characters} />} {/* NEW: Hide during all games */}
 
+      {/* Blackjack Game Component */}
       {showBlackjack && blackjackParams && (
         <div className="absolute inset-0 z-20">
           <BlackjackGameComponent
@@ -857,7 +1294,35 @@ const VisualNovelEngine = ({ playerData, selectedCharacters = {}, gameMetadata =
         </div>
       )}
 
-      {!showBlackjack && currentDialogData && (
+      {/* Dance Game Component */}
+      {showDance && danceParams && (
+        <div className="absolute inset-0 z-20">
+          <DanceComponent
+            initialEvent={{
+              action: 'startDance',
+              eventParams: danceParams
+            }}
+            onGameComplete={handleDanceComplete}
+            gameState={danceParams.gameState}
+          />
+        </div>
+      )}
+
+      {/* NEW: Dart Game Component */}
+      {showDart && dartParams && (
+        <div className="absolute inset-0 z-20">
+          <DartGame
+            initialEvent={{
+              action: 'startDart',
+              eventParams: dartParams
+            }}
+            onGameComplete={handleDartComplete}
+            gameState={dartParams.gameState}
+          />
+        </div>
+      )}
+
+      {!showBlackjack && !showDance && !showDart && currentDialogData && ( // NEW: Hide during all games
         <div className="absolute bottom-0 left-0 right-0 z-30">
           <DialogBox
             dialog={currentDialogData}

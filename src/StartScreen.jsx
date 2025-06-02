@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import LevelEditor from './editor/LevelEditor';
-import GameDataImporter from './start/GameDataImporter';
-import ExportGameButton from './start/ExportGameButton';
 
 const StartScreen = ({ onStartGame, onLoadCustomData, gameData }) => {
   const [showLevelEditor, setShowLevelEditor] = useState(false);
-  const [showImporter, setShowImporter] = useState(false);
   
   // Use gameData.metadata for the title screen
   const metadata = gameData?.metadata || {
-    title: "CLAUDE'S CASINO",
+    title: "MY CASINO",
     description: "Experience the thrill of blackjack in an immersive visual novel",
     version: "1.0.0",
     backgroundImage: "/assets/backgrounds/default.png",
@@ -20,13 +17,6 @@ const StartScreen = ({ onStartGame, onLoadCustomData, gameData }) => {
     }
   };
 
-  const handleImportGame = (importedGameData) => {
-    // Pass the full game data to parent component
-    onLoadCustomData(importedGameData);
-    
-    // Close the importer
-    setShowImporter(false);
-  };
 
   return (
     <div className="h-screen w-full bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center overflow-hidden">
@@ -38,11 +28,6 @@ const StartScreen = ({ onStartGame, onLoadCustomData, gameData }) => {
           }}
           onCancel={() => setShowLevelEditor(false)}
           initialData={gameData}
-        />
-      ) : showImporter ? (
-        <GameDataImporter
-          onImport={handleImportGame}
-          onCancel={() => setShowImporter(false)}
         />
       ) : (
         <div 
@@ -96,15 +81,6 @@ const StartScreen = ({ onStartGame, onLoadCustomData, gameData }) => {
             >
               Level Editor
             </button>
-            
-            <button
-              onClick={() => setShowImporter(true)}
-              className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-8 rounded-lg text-xl shadow-lg transform transition hover:scale-105"
-            >
-              Import Game
-            </button>
-            
-            <ExportGameButton gameData={gameData} />
           </div>
          
           <div className="text-gray-400 text-sm">
