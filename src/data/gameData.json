@@ -176,6 +176,64 @@
         "dartSkill": "95",
         "dartReputation": "+15"
       }
+    },
+    "increaseRelationship:all": {
+      "description": "Increase relationship with all characters",
+      "parameters": [
+        "amount"
+      ],
+      "updates": {
+        "victoriaRelationship": "+{amount|5}",
+        "rachelRelationship": "+{amount|5}",
+        "morganRelationship": "+{amount|5}",
+        "sophiaRelationship": "+{amount|5}",
+        "jasmineRelationship": "+{amount|5}",
+        "elenaRelationship": "+{amount|5}"
+      }
+    },
+    "successfulDate:all": {
+      "description": "Complete successful dates with all characters",
+      "parameters": [],
+      "updates": {
+        "victoriaRelationship": "+10",
+        "rachelRelationship": "+10",
+        "morganRelationship": "+10",
+        "sophiaRelationship": "+10",
+        "jasmineRelationship": "+10",
+        "elenaRelationship": "+10",
+        "casinoReputation": "+25",
+        "dateCount": "+6"
+      }
+    },
+    "unlockSecretArea": {
+      "description": "Unlock access to secret casino areas",
+      "parameters": [
+        "area"
+      ],
+      "updates": {
+        "secretAreasUnlocked": "push:{area}",
+        "casinoReputation": "+15",
+        "exclusiveAccess": "=true"
+      }
+    },
+    "becomePartner": {
+      "description": "Become Elena's business partner",
+      "parameters": [],
+      "updates": {
+        "businessPartner": "=true",
+        "casinoOwnership": "=25",
+        "playerMoney": "+50000",
+        "elenaRelationship": "+20"
+      }
+    },
+    "establishCasinoFamily": {
+      "description": "Create lasting relationships with all casino staff",
+      "parameters": [],
+      "updates": {
+        "casinoFamily": "=true",
+        "permanentVIP": "=true",
+        "lifetimeAccess": "=true"
+      }
     }
   },
   "conditionalTemplates": {
@@ -298,6 +356,36 @@
       "operator": ">=",
       "value": 90,
       "text": " You throw darts like a professional."
+    },
+    "lovesYou:elena": {
+      "variable": "elenaRelationship",
+      "operator": ">=",
+      "value": 25,
+      "text": " Elena looks at you with deep love and admiration."
+    },
+    "isBusinessPartner": {
+      "variable": "businessPartner",
+      "operator": "==",
+      "value": "true",
+      "text": " As Elena's business partner, you have special privileges."
+    },
+    "hasCasinoFamily": {
+      "variable": "casinoFamily",
+      "operator": "==",
+      "value": "true",
+      "text": " You're considered family by all the casino staff."
+    },
+    "hasSecretAccess": {
+      "variable": "exclusiveAccess",
+      "operator": "==",
+      "value": "true",
+      "text": " You have access to the casino's most exclusive areas."
+    },
+    "isUltimateVIP": {
+      "variable": "permanentVIP",
+      "operator": "==",
+      "value": "true",
+      "text": " You have permanent VIP status for life."
     }
   },
   "events": [
@@ -1760,7 +1848,7 @@
           }
         },
         {
-          "background": "/assets/backgrounds/casino-entrance.jpg",
+          "background": "/assets/backgrounds/dance-floor.jpg",
           "characters": {
             "right": {
               "image": "/assets/characters/player.png",
@@ -1788,7 +1876,7 @@
           }
         },
         {
-          "background": "/assets/backgrounds/blackjack-table.png",
+          "background": "/assets/backgrounds/dance-floor.jpg",
           "backgroundEffects": {
             "type": "disco-lights",
             "intensity": 0.6
@@ -1944,7 +2032,7 @@
             "right": {
               "image": "/assets/characters/player.png",
               "name": "Player"
-            },  
+            },
             "left": {
               "image": "/assets/characters/victoria.png",
               "name": "Victoria"
@@ -2741,7 +2829,8 @@
           "text": "After winning the first game, you receive a prize: a private room where you can have an intimate encounter with Vicky. You both head into the room, and once the door closes behind you, Vicky turns to face you.",
           "macros": [
             "successfulDate:victoria",
-            "improveReputation:15"
+            "improveReputation:15",
+            "jumpIf:{$victoriaRelationship} >= 20:late_night_casino:new_table"
           ]
         },
         {
@@ -2866,8 +2955,7 @@
             }
           ]
         }
-      ],
-      "nextEvent": "new_table"
+      ]
     },
     {
       "key": "extended_vip",
@@ -3480,7 +3568,7 @@
           ]
         }
       ],
-      "nextEvent": "ending"
+      "nextEvent": "late_night_casino"
     },
     {
       "key": "return_to_victoria",
@@ -3761,7 +3849,7 @@
           ]
         }
       ],
-      "nextEvent": "special_ending"
+      "nextEvent": "late_night_casino"
     },
     {
       "key": "special_ending",
@@ -3912,7 +4000,7 @@
           "choices": [
             {
               "text": "Start a New Game",
-              "nextEvent": "intro",
+              "nextEvent": "late_night_casino",
               "resetVariables": true
             },
             {
@@ -3922,7 +4010,670 @@
           ]
         }
       ],
-      "nextEvent": null
+      "nextEvent": "late_night_casino"
+    },
+    {
+      "key": "late_night_casino",
+      "title": "Late Night Casino Floor",
+      "editorTags": [
+        "continuation",
+        "late_night",
+        "exploration"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/casino-night.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "center": {
+              "image": "/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "mysterious"
+            }
+          },
+          "speaker": "NARRATOR",
+          "text": "The casino takes on a different atmosphere late at night. The crowds have thinned, and the lights seem softer and more intimate.",
+          "macros": [
+            "increaseVisitCount"
+          ],
+          "conditions": [
+            "isVIP"
+          ],
+          "conditionalText": {
+            "{$casinoReputation} >= 75": " The staff nods respectfully as you pass."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/casino-night.jpg",
+          "characters": {
+            "center": {
+              "image": "/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "seductive"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "The night is still young, and I know some exclusive areas that only open after midnight. Interested in seeing the casino's hidden secrets?",
+          "macros": [
+            "increaseRelationship:victoria:3"
+          ],
+          "conditions": [
+            "lovesYou:victoria"
+          ],
+          "conditionalText": {
+            "{$victoriaRelationship} >= 30": " I've been saving these special places just for you."
+          },
+          "choices": [
+            {
+              "text": "Show me these secret areas",
+              "macros": [
+                "increaseRelationship:victoria:8",
+                "beCharming"
+              ],
+              "nextEvent": "secret_casino_areas",
+              "requiresCondition": "{$victoriaRelationship} >= 15"
+            },
+            {
+              "text": "Let's check on the other girls first",
+              "macros": [
+                "increaseRelationship:victoria:3"
+              ],
+              "nextEvent": "midnight_staff_meeting"
+            },
+            {
+              "text": "I'm curious about the high roller lounge",
+              "macros": [
+                "improveReputation:5"
+              ],
+              "nextEvent": "high_roller_lounge",
+              "requiresCondition": "{$playerMoney} >= 3000"
+            },
+            {
+              "text": "Maybe we should call it a night",
+              "macros": [
+                "beNeutral"
+              ],
+              "nextEvent": "ending"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "secret_casino_areas"
+    },
+    {
+      "key": "secret_casino_areas",
+      "title": "Hidden Casino Secrets",
+      "editorTags": [
+        "secret",
+        "exclusive",
+        "romance"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/secret-passage.jpg",
+          "backgroundTransition": "slide",
+          "characters": {
+            "left": {
+              "image": "/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "excited"
+            },
+            "right": {
+              "image": "/characters/player.png",
+              "name": "Player",
+              "emotion": "curious"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "Follow me. There's a private elevator behind this bookshelf that leads to the casino owner's personal gaming rooms.",
+          "macros": [
+            "increaseRelationship:victoria:5",
+            "unlockAchievement:secret_access"
+          ],
+          "conditions": [
+            "isVIP"
+          ],
+          "conditionalText": {
+            "{$casinoReputation} >= 90": " You've earned the right to see these exclusive areas."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/owner-suite.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "sophisticated"
+            },
+            "left": {
+              "image": "/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "respectful"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "This is Elena, the casino owner. She rarely meets guests personally, but your reputation has caught her attention.",
+          "macros": [
+            "increaseRelationship:elena:5",
+            "improveReputation:15"
+          ],
+          "conditions": [
+            "isVIP"
+          ]
+        },
+        {
+          "background": "/assets/backgrounds/owner-suite.jpg",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "intrigued"
+            }
+          },
+          "speaker": "Elena",
+          "text": "So you're the one who's been making such an impression on my staff. I have a special proposition for someone of your... caliber.",
+          "macros": [
+            "increaseRelationship:elena:8"
+          ],
+          "conditions": [
+            "isCharming"
+          ],
+          "conditionalText": {
+            "{$charmPoints} >= 10": " Your reputation for charm precedes you."
+          },
+          "choices": [
+            {
+              "text": "I'm intrigued by your proposition",
+              "macros": [
+                "increaseRelationship:elena:10",
+                "beCharming"
+              ],
+              "nextEvent": "elena_proposition"
+            },
+            {
+              "text": "What kind of special games do you have here?",
+              "macros": [
+                "increaseRelationship:elena:5"
+              ],
+              "nextEvent": "exclusive_games"
+            },
+            {
+              "text": "Challenge Elena to a high-stakes game",
+              "macros": [
+                "beAggressive",
+                "increaseRelationship:elena:8"
+              ],
+              "nextEvent": "elena_challenge",
+              "requiresCondition": "{$playerMoney} >= 5000"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "elena_proposition"
+    },
+    {
+      "key": "elena_proposition",
+      "title": "The Owner's Offer",
+      "editorTags": [
+        "business",
+        "romance",
+        "choice"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/owner-suite.jpg",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "business"
+            }
+          },
+          "speaker": "Elena",
+          "text": "I'm always looking for investors and partners who understand the finer things in life. Someone with your success rate and charm could be very valuable to my operation.",
+          "macros": [
+            "increaseRelationship:elena:10",
+            "unlockAchievement:business_offer"
+          ],
+          "conditions": [
+            "isRich"
+          ],
+          "conditionalText": {
+            "{$profit} > 2000": " Your winnings tonight alone show you understand calculated risks."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/owner-suite.jpg",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "seductive"
+            },
+            "left": {
+              "image": "/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "surprised"
+            }
+          },
+          "speaker": "Elena",
+          "text": "But business can wait. Right now, I'm more interested in getting to know you personally. Victoria, would you mind giving us some privacy?",
+          "macros": [
+            "increaseRelationship:elena:8"
+          ],
+          "conditions": [
+            "lovesYou:elena"
+          ],
+          "conditionalText": {
+            "{$elenaRelationship} >= 20": " I find myself quite drawn to you."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/owner-suite.jpg",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "intimate"
+            }
+          },
+          "speaker": "Elena",
+          "text": "Now then, shall we discuss this partnership over a private dinner? I have a penthouse restaurant that overlooks the entire city.",
+          "macros": [
+            "increaseRelationship:elena:12"
+          ],
+          "choices": [
+            {
+              "text": "Accept Elena's dinner invitation",
+              "macros": [
+                "successfulDate:elena",
+                "improveReputation:25"
+              ],
+              "nextEvent": "elena_romance",
+              "requiresCondition": "{$elenaRelationship} >= 15"
+            },
+            {
+              "text": "Discuss the business opportunity first",
+              "macros": [
+                "increaseRelationship:elena:5",
+                "unlockAchievement:business_partner"
+              ],
+              "nextEvent": "business_partnership"
+            },
+            {
+              "text": "Suggest Victoria joins us",
+              "macros": [
+                "increaseRelationship:elena:8",
+                "increaseRelationship:victoria:8"
+              ],
+              "nextEvent": "threesome_elena_victoria",
+              "requiresCondition": "{$lovesYou:victoria} AND {$elenaRelationship} >= 10"
+            },
+            {
+              "text": "I should return to the main casino",
+              "macros": [
+                "increaseRelationship:elena:3"
+              ],
+              "nextEvent": "midnight_staff_meeting"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "elena_romance"
+    },
+    {
+      "key": "elena_romance",
+      "title": "Penthouse Romance",
+      "editorTags": [
+        "romance",
+        "luxury",
+        "intimate"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/penthouse-restaurant.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "elegant"
+            }
+          },
+          "speaker": "NARRATOR",
+          "text": "Elena leads you to a private elevator that takes you to the penthouse. The restaurant is breathtaking, with floor-to-ceiling windows offering a panoramic view of the city lights.",
+          "macros": [
+            "increaseRelationship:elena:10",
+            "improveReputation:20"
+          ]
+        },
+        {
+          "background": "/assets/backgrounds/penthouse-restaurant.jpg",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "romantic"
+            }
+          },
+          "speaker": "Elena",
+          "text": "I don't often bring guests here. This penthouse is my sanctuary, away from the noise and chaos of the casino floor. You must be very special.",
+          "macros": [
+            "increaseRelationship:elena:15"
+          ],
+          "conditions": [
+            "lovesYou:elena"
+          ],
+          "conditionalText": {
+            "{$isCharming}": " Your charm has certainly captured my attention completely."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/penthouse-bedroom.jpg",
+          "backgroundTransition": "fadeToBlack",
+          "speaker": "NARRATOR",
+          "text": "The evening progresses beautifully as Elena shares stories of building her casino empire. The chemistry between you is undeniable...",
+          "macros": [
+            "successfulDate:elena",
+            "unlockAchievement:casino_queen"
+          ]
+        },
+        {
+          "background": "/assets/backgrounds/penthouse-balcony.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "center": {
+              "image": "/characters/elena.png",
+              "name": "Elena",
+              "emotion": "content"
+            }
+          },
+          "speaker": "Elena",
+          "text": "That was extraordinary. I haven't felt this way about someone in years. Perhaps you'd consider a more permanent arrangement? I could use a partner like you.",
+          "macros": [
+            "increaseRelationship:elena:20",
+            "unlockAchievement:elena_love"
+          ],
+          "choices": [
+            {
+              "text": "I'd love to be your partner",
+              "macros": [
+                "increaseRelationship:elena:15",
+                "unlockAchievement:casino_partner"
+              ],
+              "nextEvent": "partnership_ending"
+            },
+            {
+              "text": "Let's take this one day at a time",
+              "macros": [
+                "increaseRelationship:elena:8"
+              ],
+              "nextEvent": "elena_continued_relationship"
+            },
+            {
+              "text": "This was amazing, but I should see the others",
+              "macros": [
+                "increaseRelationship:elena:5"
+              ],
+              "nextEvent": "midnight_staff_meeting"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "partnership_ending"
+    },
+    {
+      "key": "midnight_staff_meeting",
+      "title": "Late Night Gathering",
+      "editorTags": [
+        "group",
+        "social",
+        "finale"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/staff-lounge.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "left": {
+              "image": "/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "happy"
+            },
+            "center": {
+              "image": "/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "friendly"
+            },
+            "right": {
+              "image": "/characters/morgan.png",
+              "name": "Morgan",
+              "emotion": "relaxed"
+            }
+          },
+          "speaker": "NARRATOR",
+          "text": "You find yourself in the staff lounge where all the girls you've met tonight have gathered for their end-of-shift meeting. They seem delighted to see you.",
+          "macros": [
+            "improveReputation:10"
+          ],
+          "conditions": [
+            "isVIP"
+          ],
+          "conditionalText": {
+            "{$casinoReputation} >= 50": " Your reputation has definitely made an impression on everyone."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/staff-lounge.jpg",
+          "characters": {
+            "left": {
+              "image": "/characters/sophia.png",
+              "name": "Sophia",
+              "emotion": "elegant"
+            },
+            "center": {
+              "image": "/characters/jasmine.png",
+              "name": "Jasmine",
+              "emotion": "playful"
+            }
+          },
+          "speaker": "Sophia",
+          "text": "Well look who's still here! You've certainly made quite the impression on all of us tonight. We were just discussing what a memorable evening this has been.",
+          "macros": [
+            "increaseRelationship:sophia:5",
+            "increaseRelationship:jasmine:5"
+          ],
+          "conditions": [
+            "likesYou:sophia",
+            "likesYou:jasmine"
+          ]
+        },
+        {
+          "background": "/assets/backgrounds/staff-lounge.jpg",
+          "characters": {
+            "center": {
+              "image": "/characters/morgan.png",
+              "name": "Morgan",
+              "emotion": "grinning"
+            }
+          },
+          "speaker": "Morgan",
+          "text": "I told them all about your dart skills! They're impressed. We were thinking... how about one final group activity before the night ends?",
+          "macros": [
+            "increaseRelationship:morgan:8"
+          ],
+          "conditions": [
+            "isDartSkilled"
+          ],
+          "conditionalText": {
+            "{$dartSkill} >= 70": " Your dart reputation has spread throughout the casino."
+          },
+          "choices": [
+            {
+              "text": "What kind of group activity?",
+              "macros": [
+                "increaseRelationship:all:5"
+              ],
+              "nextEvent": "group_finale"
+            },
+            {
+              "text": "Group dance competition",
+              "macros": [
+                "increaseRelationship:all:8",
+                "beCharming"
+              ],
+              "nextEvent": "group_dance_finale",
+              "action": "startDance",
+              "eventParams": {
+                "partner": "Everyone",
+                "song": {
+                  "title": "Casino Grand Finale",
+                  "bpm": 130,
+                  "duration": 240,
+                  "genre": "Party Mix"
+                },
+                "difficulty": "expert",
+                "venue": "Staff Lounge",
+                "atmosphere": "celebration",
+                "specialMoves": [
+                  "group_formation",
+                  "synchronized_dance",
+                  "finale_move"
+                ]
+              }
+            },
+            {
+              "text": "Tournament-style games",
+              "macros": [
+                "addGamePlayed:tournament",
+                "improveReputation:15"
+              ],
+              "nextEvent": "tournament_finale"
+            }
+          ]
+        }
+      ],
+      "postDialog": [
+        {
+          "speaker": "NARRATOR",
+          "text": "What an incredible performance! Your final score was {grade} with {accuracy}% accuracy. The entire staff is cheering for your amazing finale!",
+          "macros": [
+            "increaseRelationship:all:15",
+            "unlockAchievement:group_performer"
+          ]
+        }
+      ],
+      "nextEvent": "group_finale"
+    },
+    {
+      "key": "group_finale",
+      "title": "Ultimate Casino Experience",
+      "editorTags": [
+        "finale",
+        "group",
+        "celebration"
+      ],
+      "preDialog": [
+        {
+          "background": "/assets/backgrounds/private-party-room.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "left": {
+              "image": "/characters/victoria.png",
+              "name": "Victoria",
+              "emotion": "excited"
+            },
+            "center": {
+              "image": "/characters/rachel.png",
+              "name": "Rachel",
+              "emotion": "happy"
+            },
+            "right": {
+              "image": "/characters/morgan.png",
+              "name": "Morgan",
+              "emotion": "celebration"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "We've arranged something special - a private party just for you! You've been such an amazing guest that we wanted to give you the ultimate casino experience.",
+          "macros": [
+            "increaseRelationship:all:10",
+            "improveReputation:30",
+            "unlockAchievement:ultimate_experience"
+          ]
+        },
+        {
+          "background": "/assets/backgrounds/private-party-room.jpg",
+          "characters": {
+            "left": {
+              "image": "/characters/sophia.png",
+              "name": "Sophia",
+              "emotion": "elegant"
+            },
+            "center": {
+              "image": "/characters/jasmine.png",
+              "name": "Jasmine",
+              "emotion": "seductive"
+            }
+          },
+          "speaker": "Jasmine",
+          "text": "This is our way of saying thank you for being such a wonderful guest. Tonight has been unforgettable for all of us.",
+          "macros": [
+            "increaseRelationship:all:8"
+          ],
+          "conditions": [
+            "isVIP"
+          ],
+          "conditionalText": {
+            "{$totalWinnings} > 5000": " Your success tonight has been legendary."
+          }
+        },
+        {
+          "background": "/assets/backgrounds/private-party-room.jpg",
+          "backgroundTransition": "fadeToBlack",
+          "speaker": "NARRATOR",
+          "text": "The private party continues late into the night with games, dancing, and intimate conversations. You realize this has been the most incredible casino experience of your life...",
+          "macros": [
+            "successfulDate:all",
+            "unlockAchievement:harem_ending",
+            "improveReputation:50"
+          ]
+        },
+        {
+          "background": "/assets/backgrounds/sunrise-balcony.jpg",
+          "backgroundTransition": "fade",
+          "characters": {
+            "center": {
+              "image": "/characters/group.png",
+              "name": "Everyone",
+              "emotion": "content"
+            }
+          },
+          "speaker": "Victoria",
+          "text": "As the sun rises, we want you to know that you'll always have a home here. We've never met anyone quite like you.",
+          "macros": [
+            "increaseRelationship:all:15"
+          ],
+          "choices": [
+            {
+              "text": "Promise to return soon",
+              "macros": [
+                "unlockAchievement:casino_family"
+              ],
+              "nextEvent": "ultimate_ending"
+            },
+            {
+              "text": "Ask them to visit you sometime",
+              "macros": [
+                "unlockAchievement:reverse_invitation"
+              ],
+              "nextEvent": "alternative_ending"
+            }
+          ]
+        }
+      ],
+      "nextEvent": "ultimate_ending"
     }
   ],
   "gameVariables": {

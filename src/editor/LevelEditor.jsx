@@ -5,6 +5,8 @@ import MacroLibraryEditor from './MacroLibraryEditor';
 import AdvancedExport from './AdvancedExport';
 import ImportJsonModal from './ImportJsonModal';
 import AssetManager from './AssetManager';
+import StoryGenerator from './StoryGenerator';
+import StoryMerger from './StoryMerger';
 
 const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
   const [gameData, setGameData] = useState({
@@ -49,6 +51,13 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
   const handleEventsChange = (newEvents) => {
     setGameData({ ...gameData, events: newEvents });
     setUnsavedChanges(true);
+  };
+
+  const handleMergeComplete = (mergedStoryData) => {
+    setGameData(mergedStoryData);
+    setUnsavedChanges(true);
+    // Switch to events tab to show the merged result
+    setActiveTab(2);
   };
   
   const handleSave = () => {
@@ -144,7 +153,8 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
         event.nextEvent ||
         (event.preDialog && event.preDialog.some(dialog => dialog.choices && dialog.choices.length > 0)) ||
         (event.postDialog && event.postDialog.some(dialog => dialog.choices && dialog.choices.length > 0))
-      ).length
+      ).length,
+      storyEndpoints: gameData.events.filter(event => !event.nextEvent || event.nextEvent === 'end').length
     };
   };
   
@@ -155,6 +165,11 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
       id: 'metadata',
       name: 'Metadata',
       badge: null,
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
       component: (
         <MetadataEditor
           metadata={gameData.metadata}
@@ -166,6 +181,12 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
       id: 'macros',
       name: 'Macros',
       badge: stats.totalMacros,
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
       component: (
         <MacroLibraryEditor
           macros={gameData.macros}
@@ -179,6 +200,11 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
       id: 'events',
       name: 'Events',
       badge: gameData.events.length,
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
       component: (
         <EventsEditor
           events={gameData.events}
@@ -186,6 +212,32 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
           availableMacros={Object.keys(gameData.macros)}
           availableTemplates={Object.keys(gameData.conditionalTemplates)}
         />
+      )
+    },
+    {
+      id: 'generator',
+      name: 'Story Generator',
+      badge: stats.storyEndpoints > 0 ? stats.storyEndpoints : null,
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+      component: (
+        <StoryGenerator gameData={gameData} />
+      )
+    },
+    {
+      id: 'merger',
+      name: 'Story Merger',
+      badge: null,
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      ),
+      component: (
+        <StoryMerger gameData={gameData} onMergeComplete={handleMergeComplete} />
       )
     }
   ];
@@ -202,6 +254,9 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
             </h2>
             <div className="text-sm text-gray-400 mt-1">
               {stats.totalEvents} events • {stats.totalMacros} macros • {stats.totalTemplates} templates • {stats.connectedEvents} connected
+              {stats.storyEndpoints > 0 && (
+                <span className="ml-2 text-yellow-400">• {stats.storyEndpoints} endpoint{stats.storyEndpoints !== 1 ? 's' : ''}</span>
+              )}
             </div>
           </div>
           <div className="flex space-x-2">
@@ -253,18 +308,19 @@ const LevelEditor = ({ onSave, onCancel, initialData = {} }) => {
 
       {/* Tab Navigation */}
       <div className="bg-gray-800 border-b border-yellow-700 px-4 flex-shrink-0">
-        <div className="flex">
+        <div className="flex overflow-x-auto">
           {tabs.map((tab, index) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(index)}
-              className={`py-3 px-6 font-semibold cursor-pointer focus:outline-none border-b-2 transition-colors ${
+              className={`py-3 px-4 font-semibold cursor-pointer focus:outline-none border-b-2 transition-colors whitespace-nowrap flex items-center ${
                 activeTab === index
                   ? 'border-yellow-500 text-yellow-400 bg-gray-700'
                   : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-750'
               }`}
             >
-              {tab.name}
+              {tab.icon}
+              <span className="ml-2">{tab.name}</span>
               {tab.badge !== null && (
                 <span className="ml-2 px-2 py-1 bg-yellow-800 text-yellow-200 rounded-full text-xs">
                   {tab.badge}
